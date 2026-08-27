@@ -1,0 +1,2539 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sambung Ayat & Tebak Arti — PAI SMA/SMK</title>
+<style>
+  :root{
+    --ink:#122c2b;
+    --ink-2:#0d2221;
+    --parchment:#f7efdc;
+    --parchment-2:#efe4c7;
+    --gold:#c1962f;
+    --gold-light:#e0b95a;
+    --teal:#1f5c56;
+    --teal-light:#3a7d73;
+    --maroon:#8c3b2e;
+    --sage:#4c7a5b;
+    --text-dark:#1c2b28;
+    --text-soft:#5b6b62;
+    --serif: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --arabic: "Traditional Arabic", "Scheherazade New", "Amiri Quran", "Al Qalam Quran", "KFGQPC Uthman Taha Naskh", "Noto Naskh Arabic", "Arial Unicode MS", serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(193,150,47,0.10), transparent 40%),
+      radial-gradient(circle at 90% 85%, rgba(58,125,115,0.18), transparent 45%),
+      var(--ink);
+    color:var(--parchment);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:28px 16px 60px;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* geometric star ornament, signature element */
+  .star{
+    position:absolute; opacity:0.07; pointer-events:none;
+  }
+  .app{
+    max-width:720px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+  }
+  .brand{
+    text-align:center;
+    margin-bottom:26px;
+  }
+  .brand .ornament{
+    width:56px;height:auto;margin:0 auto 10px;
+    color:var(--gold-light);
+    display:block;
+  }
+  .brand h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(26px,5vw,36px);
+    margin:0 0 6px;
+    letter-spacing:0.3px;
+    color:var(--parchment);
+  }
+  .brand p{
+    margin:0;
+    color:var(--gold-light);
+    font-size:14px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+  }
+
+  .card{
+    background:var(--parchment);
+    color:var(--text-dark);
+    border-radius:18px;
+    padding:26px 24px;
+    position:relative;
+    box-shadow:0 18px 40px rgba(0,0,0,0.35);
+    border:1px solid var(--parchment-2);
+  }
+  .card::before, .card::after{
+    content:"";
+    position:absolute;
+    width:22px;height:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><path fill='%23c1962f' d='M20 0 L24 14 L20 14.2 L20 0 Z M20 40 L16 26 L20 25.8 L20 40 Z M0 20 L14 16 L14.2 20 L0 20 Z M40 20 L26 24 L25.8 20 L40 20 Z M6 6 L17 15 L15 17 L6 6 Z M34 34 L23 25 L25 23 L34 34 Z M34 6 L23 15 L25 17 L34 6 Z M6 34 L17 25 L15 23 L6 34 Z'/></svg>");
+    background-size:contain;
+    opacity:0.55;
+  }
+  .card::before{top:12px;left:12px;}
+  .card::after{top:12px;right:12px;transform:rotate(90deg);}
+
+  /* ---------- Home / mode select ---------- */
+  .mode-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+    margin:18px 0 8px;
+  }
+  @media (max-width:640px){ .mode-grid{grid-template-columns:1fr;} }
+  .mode-btn{
+    text-align:left;
+    background:#fff;
+    border:2px solid var(--parchment-2);
+    border-radius:14px;
+    padding:18px 16px;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    font-family:inherit;
+  }
+  .mode-btn:hover{transform:translateY(-2px); border-color:var(--gold); box-shadow:0 8px 18px rgba(193,150,47,0.25);}
+  .mode-btn.selected{border-color:var(--teal); background:#eef6f2; box-shadow:0 0 0 3px rgba(31,92,86,0.15) inset;}
+  .mode-btn .icon{font-size:26px; display:block; margin-bottom:8px;}
+  .mode-btn .title{font-family:var(--serif); font-weight:700; font-size:17px; color:var(--text-dark); margin-bottom:4px;}
+  .mode-btn .desc{font-size:13px; color:var(--text-soft); line-height:1.4;}
+
+  .section-label{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--teal);
+    margin:22px 0 10px;
+  }
+  .surah-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:10px;
+  }
+  @media (max-width:420px){ .surah-grid{grid-template-columns:1fr;} }
+  .surah-chip.expanded{grid-column:1/-1;}
+  .surah-chip{
+    display:flex; justify-content:space-between; align-items:center;
+    background:#fff;
+    border:1.5px solid var(--parchment-2);
+    border-radius:10px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:14px;
+    color:var(--text-dark);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .surah-chip .ar{font-family:var(--arabic); font-size:17px; color:var(--teal);}
+  .surah-chip:hover{border-color:var(--gold);}
+  .surah-chip.selected{border-color:var(--teal); background:#eef6f2; font-weight:700;}
+  .ayat-hint{font-size:12px; color:#8a8072; margin-top:8px;}
+  .surah-chip{flex-direction:column; align-items:stretch; gap:0;}
+  .surah-chip-head{display:flex; justify-content:space-between; align-items:center; width:100%;}
+  .surah-expand-toggle{
+    font-size:11px; color:var(--teal); text-decoration:underline; cursor:pointer;
+    margin-top:8px; align-self:flex-start; font-weight:600;
+  }
+  .ayat-pill-list{
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; padding-top:8px;
+    border-top:1px dashed var(--parchment-2);
+  }
+  .ayat-pill{
+    font-size:12px; padding:4px 9px; border-radius:20px; cursor:pointer;
+    border:1.3px solid var(--parchment-2); background:#fafafa; color:var(--text-dark);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .ayat-pill:hover{border-color:var(--gold);}
+  .ayat-pill.selected{background:var(--teal); color:#fff; border-color:var(--teal); font-weight:700;}
+  .surah-chip.loading{opacity:0.6; cursor:wait;}
+  .surah-chip .ar.muted{color:#9a927e; font-family:var(--sans); font-size:12px; font-style:italic;}
+  .inline-warning{
+    margin-top:12px; padding:10px 14px; border-radius:10px;
+    background:#fdecea; border:1.3px solid #f2b8b5; color:#9a3b34;
+    font-size:13px; text-align:center;
+  }
+
+  /* ================= LAMPU ANIMASI (layar daftar) ================= */
+  #screen-daftar{
+    --lamp-color:#9aa3ab;
+    --glow-color:rgba(0,0,0,0);
+  }
+  #screen-daftar.state-green{ --lamp-color:#1f5c56; --glow-color:rgba(31,92,86,0.55); }
+  #screen-daftar.state-red{ --lamp-color:#8c3b2e; --glow-color:rgba(140,59,46,0.55); }
+  .lamp-wrap{
+    position:relative;
+    width:150px;height:190px;
+    margin:-6px auto 6px;
+    display:flex;align-items:flex-end;justify-content:center;
+    cursor:pointer;
+    user-select:none;
+  }
+  .lamp-wrap svg{overflow:visible;}
+  .lamp-wrap .cone{
+    fill:var(--lamp-color);
+    opacity:0.16;
+    transition:fill .4s ease, opacity .4s ease;
+  }
+  .lamp-wrap .shade{
+    fill:var(--lamp-color);
+    transition:fill .4s ease, filter .4s ease;
+    filter:drop-shadow(0 0 0px var(--glow-color));
+  }
+  #screen-daftar.state-green .shade,
+  #screen-daftar.state-red .shade{
+    filter:drop-shadow(0 0 14px var(--glow-color));
+  }
+  .lamp-wrap .shade-rim{ fill:none; stroke:rgba(255,255,255,.6); stroke-width:1.5; }
+  .lamp-wrap .pole{ fill:var(--parchment-2); }
+  .lamp-wrap .base{ fill:#cdbf9e; }
+  .lamp-wrap .cord{ fill:none; stroke:#8a8072; stroke-width:2; stroke-linecap:round; }
+  .lamp-wrap .cord-bulb{ fill:#fafafa; stroke:#cfcfcf; stroke-width:1; }
+  .lamp-wrap .eye{ fill:none; stroke:#fdf8ec; stroke-width:2.5; stroke-linecap:round; }
+  .lamp-wrap .eye-open{ fill:#20262c; stroke:none; }
+  .lamp-wrap .mouth-smile{ fill:#c0392b; stroke:none; }
+  .lamp-wrap .sleep-face{ opacity:1; transition:opacity .25s ease; }
+  .lamp-wrap .awake-face{ opacity:0; transition:opacity .25s ease; }
+  #screen-daftar.state-green .awake-face,
+  #screen-daftar.state-red .awake-face{ opacity:1; }
+  #screen-daftar.state-green .sleep-face,
+  #screen-daftar.state-red .sleep-face{ opacity:0; }
+  .lamp-hint{
+    text-align:center; font-size:11px; color:var(--text-soft);
+    margin:-2px 0 14px;
+    transition:opacity .25s ease;
+  }
+  .daftar-fields{
+    display:none;
+    opacity:0;
+    transform:translateY(-6px);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  #screen-daftar.state-green .daftar-fields,
+  #screen-daftar.state-red .daftar-fields{
+    display:block;
+    opacity:1;
+    transform:translateY(0);
+  }
+  .lamp-credit{
+    text-align:center;
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin:2px 0 6px;
+    opacity:0;
+    max-height:0;
+    overflow:hidden;
+    transition:opacity .5s ease;
+    background:linear-gradient(90deg,
+      var(--gold) 0%, var(--gold-light) 22%, #fff6da 40%,
+      #fffdf5 50%, #fff6da 60%, var(--gold-light) 78%, var(--gold) 100%);
+    background-size:250% auto;
+    background-position:0% center;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  #screen-daftar.state-green .lamp-credit{
+    opacity:1;
+    max-height:40px;
+    animation:creditShimmer 3.2s linear infinite, creditGlow 2.1s ease-in-out infinite alternate;
+  }
+  @keyframes creditShimmer{
+    to{ background-position:-250% center; }
+  }
+  @keyframes creditGlow{
+    from{ filter:drop-shadow(0 0 2px rgba(224,185,90,0.35)) drop-shadow(0 0 0px rgba(255,246,218,0)); }
+    to{ filter:drop-shadow(0 0 9px rgba(224,185,90,0.85)) drop-shadow(0 0 16px rgba(193,150,47,0.45)); }
+  }
+  #screen-daftar.state-green .lamp-hint,
+  #screen-daftar.state-red .lamp-hint{
+    display:none;
+  }
+  @keyframes lampSquish{
+    0%{ transform:scaleY(1) scaleX(1); }
+    30%{ transform:scaleY(0.9) scaleX(1.06); }
+    60%{ transform:scaleY(1.05) scaleX(0.97); }
+    100%{ transform:scaleY(1) scaleX(1); }
+  }
+  .lamp-wrap.pulse .shade-group{
+    animation:lampSquish .4s ease;
+    transform-origin:75px 150px;
+  }
+  @keyframes daftarShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-5px); }
+    80%{ transform:translateX(5px); }
+  }
+  #screen-daftar.shake{ animation:daftarShake .4s ease; }
+
+  .start-btn{
+    width:100%;
+    margin-top:24px;
+    background:var(--teal);
+    color:#fdf8ec;
+    border:none;
+    border-radius:12px;
+    padding:15px;
+    font-family:var(--serif);
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:0.3px;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .start-btn:hover{background:var(--teal-light);}
+  .start-btn:active{transform:scale(0.99);}
+  .start-btn:disabled{background:#b9c2be; cursor:not-allowed;}
+
+  /* ---------- Quiz screen ---------- */
+  .back-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    background:none;
+    border:none;
+    color:var(--teal);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0 0 14px;
+    text-decoration:none;
+  }
+  .back-btn:hover{ color:var(--teal-light); text-decoration:underline; }
+
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px;
+    font-size:13px;
+    color:var(--gold-light);
+  }
+  .topbar .stat{display:flex; gap:16px;}
+  .topbar b{color:var(--parchment); font-family:var(--serif); font-size:15px;}
+  .progress-track{
+    height:6px;
+    background:rgba(255,255,255,0.12);
+    border-radius:6px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius:6px;
+    transition:width .35s ease;
+  }
+
+  .q-kicker{
+    font-family:var(--serif);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--teal);
+    font-weight:700;
+    margin-bottom:12px;
+  }
+  .q-arabic{
+    direction:rtl;
+    font-family:var(--arabic);
+    font-size:clamp(26px,6vw,34px);
+    line-height:2;
+    color:var(--text-dark);
+    text-align:center;
+    padding:18px 10px;
+    background:#fff;
+    border-radius:12px;
+    border:1px solid var(--parchment-2);
+    margin-bottom:8px;
+  }
+  .q-context{
+    text-align:center;
+    font-size:13px;
+    font-style:italic;
+    color:var(--text-soft);
+    margin-bottom:18px;
+  }
+  .q-prompt{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:15px;
+    color:var(--text-dark);
+    margin-bottom:14px;
+    text-align:center;
+  }
+
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .opt{
+    background:#fff;
+    border:1.5px solid var(--parchment-2);
+    border-radius:12px;
+    padding:13px 16px;
+    text-align:left;
+    cursor:pointer;
+    font-family:var(--sans);
+    font-size:15px;
+    color:var(--text-dark);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition:border-color .12s ease, background .12s ease, transform .08s ease;
+  }
+  .opt .ar{font-family:var(--arabic); direction:rtl; font-size:19px; flex:1;}
+  .opt:hover:not(.locked){border-color:var(--gold); transform:translateX(2px);}
+  .opt.correct{border-color:var(--sage); background:#eaf5ee; font-weight:700;}
+  .opt.wrong{border-color:var(--maroon); background:#fbeae7;}
+  .opt.locked{cursor:default;}
+  .opt .mark{font-weight:800; width:18px; text-align:center;}
+
+  .feedback{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:14px;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.ok{background:#eaf5ee; color:#2e5b3f; border:1px solid #bfe0cb;}
+  .feedback.no{background:#fbeae7; color:#7a2d21; border:1px solid #edb9ae;}
+
+  .next-btn{
+    margin-top:16px;
+    width:100%;
+    background:var(--gold);
+    color:#3a2a06;
+    border:none;
+    border-radius:12px;
+    padding:14px;
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    display:none;
+  }
+  .next-btn.show{display:block;}
+  .next-btn:hover{background:var(--gold-light);}
+
+  /* ---------- Hafalan screen ---------- */
+  .hf-progress-note{
+    text-align:center; font-size:12.5px; color:var(--text-soft); margin:-4px 0 16px;
+  }
+  .hf-play-btn{
+    display:block; width:100%; margin:0 0 12px;
+    background:#fff; border:1.5px solid var(--teal); color:var(--teal);
+    border-radius:12px; padding:12px; font-family:var(--serif); font-weight:700;
+    font-size:14.5px; cursor:pointer; transition:background .12s ease;
+  }
+  .hf-play-btn:hover{ background:#eef6f2; }
+  .hf-reveal-btn{
+    display:block; width:100%; margin:0 0 8px;
+    background:transparent; border:1.5px dashed var(--gold); color:#8a6a1f;
+    border-radius:12px; padding:11px; font-family:var(--sans); font-weight:600;
+    font-size:13.5px; cursor:pointer;
+  }
+  .hf-reveal-btn:hover{ border-style:solid; }
+  .hf-arti{
+    background:#fbf6e8; border:1px solid var(--parchment-2); border-radius:10px;
+    padding:12px 14px; font-size:14px; color:var(--text-dark); margin-bottom:14px; line-height:1.5;
+  }
+  .hf-check{
+    display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text-dark);
+    margin:4px 0 18px; cursor:pointer; user-select:none;
+  }
+  .hf-check input{ width:17px; height:17px; accent-color:var(--teal); cursor:pointer; }
+  #hf-prev-btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  /* ---------- Batas Hafalan panel (di layar pilih surah) ---------- */
+  .hf-batas-panel{
+    background:#fbf6e8; border:1.3px dashed var(--gold);
+    border-radius:12px; padding:14px 16px; margin:14px 0 4px;
+  }
+  .hf-batas-panel .hf-batas-title{
+    font-family:var(--serif); font-weight:700; font-size:13.5px;
+    color:#8a6a1f; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .hf-batas-row{ display:flex; gap:10px; }
+  .hf-batas-row .field{ flex:1; margin-bottom:12px; }
+  .hf-batas-panel .field label{ font-size:12px; }
+  .hf-batas-panel .field input{ padding:9px 12px; font-size:14px; }
+  .hf-batas-hint{ font-size:11.5px; color:var(--text-soft); margin:-4px 0 12px; line-height:1.4; }
+  .hf-resume-note{
+    font-size:12.5px; color:var(--teal); background:#eef6f2; border:1px solid var(--parchment-2);
+    border-radius:8px; padding:8px 12px; margin-top:2px; line-height:1.4;
+  }
+
+  /* ---------- Setoran Hafalan (rekam suara + koreksi) ---------- */
+  .hf-setoran-box{
+    background:#fff; border:1.5px solid var(--parchment-2); border-radius:14px;
+    padding:16px; margin:4px 0 16px;
+  }
+  .hf-setoran-title{ font-family:var(--serif); font-weight:700; font-size:15px; color:var(--maroon); margin:0 0 4px; }
+  .hf-setoran-desc{ font-size:12.5px; color:var(--text-soft); margin:0 0 12px; line-height:1.4; }
+  .hf-record-btn{
+    display:block; width:100%; padding:12px; border-radius:12px; border:none;
+    background:var(--maroon); color:#fff; font-family:var(--serif); font-weight:700;
+    font-size:14.5px; cursor:pointer; transition:background .15s ease;
+  }
+  .hf-record-btn:hover{ background:#a34a3a; }
+  .hf-record-btn.recording{ background:#7a2e23; animation:hf-pulse 1.2s ease-in-out infinite; }
+  @keyframes hf-pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(140,59,46,0.45); }
+    50%{ box-shadow:0 0 0 10px rgba(140,59,46,0); }
+  }
+  .hf-setoran-result{ margin-top:14px; padding-top:14px; border-top:1px dashed var(--parchment-2); }
+  .hf-setoran-score{ font-size:14px; margin-bottom:10px; line-height:1.6; }
+  .sr-score-num{ font-family:var(--serif); font-weight:700; font-size:20px; color:var(--text-dark); margin-right:6px; }
+  .sr-good{ color:var(--sage); font-weight:600; }
+  .sr-mid{ color:#8a6a1f; font-weight:600; }
+  .sr-bad{ color:var(--maroon); font-weight:600; }
+  .hf-setoran-compare{
+    font-family:var(--arabic); font-size:20px; line-height:2.1; direction:rtl; text-align:right;
+    background:#fbf6e8; border:1px solid var(--parchment-2); border-radius:10px; padding:12px 14px; margin-bottom:10px;
+  }
+  .sr-ok{ color:var(--teal); }
+  .sr-miss{ color:var(--maroon); text-decoration:underline wavy var(--maroon); text-underline-offset:4px; }
+  .hf-setoran-said{ font-size:12.5px; color:var(--text-soft); margin-bottom:12px; line-height:1.5; }
+  .sr-said-label{ font-weight:700; color:var(--text-dark); }
+  .sr-said-text{ font-family:var(--arabic); direction:rtl; }
+  .hf-setoran-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .hf-setoran-accept-btn{
+    flex:1; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:10px 14px;
+    font-family:var(--serif); font-weight:700; font-size:13.5px; cursor:pointer;
+  }
+  .hf-setoran-accept-btn:hover{ background:var(--teal-light); }
+  .hf-setoran-note{ font-size:12px; color:#9a3b34; margin-top:10px; }
+
+  /* ---------- Result screen ---------- */
+  .result-hero{
+    text-align:center;
+    padding:10px 0 4px;
+  }
+  .result-score{
+    font-family:var(--serif);
+    font-size:52px;
+    font-weight:700;
+    color:var(--teal);
+    line-height:1;
+    margin:6px 0;
+  }
+  .result-sub{color:var(--text-soft); font-size:14px; margin-bottom:18px;}
+  .stat-row{
+    display:flex; justify-content:center; gap:26px;
+    margin:18px 0 22px;
+    flex-wrap:wrap;
+  }
+  .stat-box{text-align:center;}
+  .stat-box .num{font-family:var(--serif); font-size:24px; font-weight:700; color:var(--text-dark);}
+  .stat-box .lbl{font-size:12px; color:var(--text-soft); text-transform:uppercase; letter-spacing:0.6px;}
+  .review-item{
+    border-top:1px solid var(--parchment-2);
+    padding:12px 2px;
+    font-size:13.5px;
+  }
+  .review-item .rq{font-family:var(--arabic); direction:rtl; font-size:17px; color:var(--text-dark); margin-bottom:6px;}
+  .review-item .ra{color:var(--maroon);}
+  .review-item .rc{color:var(--sage);}
+  .btn-row{display:flex; gap:10px; margin-top:20px;}
+  .btn-row button{flex:1;}
+  .ghost-btn{
+    background:transparent;
+    border:1.5px solid var(--teal);
+    color:var(--teal);
+    border-radius:12px;
+    padding:13px;
+    font-family:var(--serif);
+    font-weight:700;
+    cursor:pointer;
+  }
+  .ghost-btn:hover{background:#eef6f2;}
+
+  .q-arabic::selection, .opt .ar::selection, .review-item .rq::selection{
+    background:var(--gold-light);
+    color:#3a2a06;
+  }
+  .sound-toggle{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    margin:0 auto 18px;
+    width:fit-content;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(224,185,90,0.4);
+    color:var(--gold-light);
+    border-radius:999px;
+    padding:6px 14px;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .sound-toggle:hover{background:rgba(255,255,255,0.14);}
+  .sound-toggle .dot{width:7px;height:7px;border-radius:50%;background:var(--sage);}
+  .sound-toggle.off .dot{background:var(--maroon);}
+
+  /* ---------- Daftar / Auth / Admin ---------- */
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:13px; font-weight:700; color:var(--teal); margin-bottom:6px;}
+  .field input, .field select{
+    width:100%; padding:12px 14px; border-radius:10px;
+    border:1.5px solid var(--parchment-2); font-family:var(--sans); font-size:15px;
+    color:var(--text-dark); background:#fff;
+  }
+  .field input:focus, .field select:focus{outline:none; border-color:var(--gold);}
+  .field-error{color:#9a3b34; font-size:12.5px; margin-top:6px; display:none;}
+  .field-error.show{display:block;}
+  .student-badge{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    background:#eef6f2; border:1.3px solid var(--parchment-2); border-radius:12px;
+    padding:10px 14px; margin-bottom:18px; font-size:13px; color:var(--text-dark);
+  }
+  .student-badge b{font-family:var(--serif); font-size:14px;}
+  .student-badge .swap{color:var(--maroon); text-decoration:underline; cursor:pointer; font-size:12px; white-space:nowrap;}
+  .admin-link{
+    text-align:center; margin-top:10px;
+  }
+  .admin-link a{color:rgba(247,239,220,0.5); font-size:12px; text-decoration:underline; cursor:pointer;}
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(13,34,33,0.75);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-card{
+    background:var(--parchment); border-radius:16px; padding:24px; max-width:360px; width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,0.4);
+  }
+  .modal-card h3{font-family:var(--serif); margin:0 0 14px; color:var(--text-dark);}
+  .modal-btn-row{display:flex; gap:10px; margin-top:16px;}
+  .modal-btn-row button{flex:1;}
+  .admin-topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+  .admin-topbar h2{font-family:var(--serif); font-size:19px; color:var(--text-dark); margin:0;}
+  .admin-logout{color:var(--maroon); font-size:12.5px; text-decoration:underline; cursor:pointer;}
+  .admin-tabs{display:flex; gap:8px; margin-bottom:18px;}
+  .admin-tab-btn{
+    flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--parchment-2);
+    background:#fff; font-family:var(--serif); font-weight:700; font-size:13px; cursor:pointer;
+    color:var(--text-soft);
+  }
+  .admin-tab-btn.active{border-color:var(--teal); background:#eef6f2; color:var(--teal);}
+  .admin-panel{display:none;}
+  .admin-panel.active{display:block;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--parchment-2); border-radius:10px; margin-bottom:14px;}
+  table.data-table{width:100%; border-collapse:collapse; font-size:12.5px; min-width:520px;}
+  table.data-table th, table.data-table td{padding:8px 10px; border-bottom:1px solid var(--parchment-2); text-align:left; white-space:nowrap;}
+  table.data-table th{background:#eef6f2; color:var(--teal); font-family:var(--serif); position:sticky; top:0;}
+  table.data-table td.ar-cell{font-family:var(--arabic); direction:rtl; font-size:15px; white-space:normal; min-width:220px;}
+  table.data-table .row-actions{display:flex; gap:8px;}
+  table.data-table .row-actions button{
+    border:none; background:none; cursor:pointer; font-size:13px; padding:2px 4px;
+  }
+  .edit-act{color:var(--teal);} .del-act{color:var(--maroon);}
+  .soal-form{background:#fff; border:1.5px solid var(--parchment-2); border-radius:12px; padding:16px; margin-bottom:16px;}
+  .soal-form .grid2{display:grid; grid-template-columns:1fr 1fr; gap:0 12px;}
+  @media (max-width:480px){ .soal-form .grid2{grid-template-columns:1fr;} }
+  .admin-toolbar{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .admin-toolbar button{flex:1; min-width:140px;}
+  .filter-row{display:flex; gap:10px; margin-bottom:12px;}
+  .filter-row select, .filter-row input{flex:1;}
+  .small-note{font-size:12px; color:var(--text-soft); margin:-6px 0 14px;}
+  .loading-note{text-align:center; color:var(--text-soft); font-size:13px; padding:20px 0;}
+
+  .hidden{display:none !important;}
+  .footnote{
+    text-align:center;
+    color:rgba(247,239,220,0.45);
+    font-size:12px;
+    margin-top:22px;
+  }
+</style>
+</head>
+<body>
+
+<svg class="star" style="top:-40px; left:-40px; width:220px;" viewBox="0 0 40 40"><path fill="#e0b95a" d="M20 0 L24 14 L20 14.2 L20 0 Z M20 40 L16 26 L20 25.8 L20 40 Z M0 20 L14 16 L14.2 20 L0 20 Z M40 20 L26 24 L25.8 20 L40 20 Z M6 6 L17 15 L15 17 L6 6 Z M34 34 L23 25 L25 23 L34 34 Z M34 6 L23 15 L25 17 L34 6 Z M6 34 L17 25 L15 23 L6 34 Z"/></svg>
+<svg class="star" style="bottom:-60px; right:-50px; width:260px;" viewBox="0 0 40 40"><path fill="#3a7d73" d="M20 0 L24 14 L20 14.2 L20 0 Z M20 40 L16 26 L20 25.8 L20 40 Z M0 20 L14 16 L14.2 20 L0 20 Z M40 20 L26 24 L25.8 20 L40 20 Z M6 6 L17 15 L15 17 L6 6 Z M34 34 L23 25 L25 23 L34 34 Z M34 6 L23 15 L25 17 L34 6 Z M6 34 L17 25 L15 23 L6 34 Z"/></svg>
+
+<div class="app">
+
+  <div class="brand">
+    <svg class="ornament" viewBox="0 0 48 40" fill="none">
+      <!-- bentuk Al-Qur'an: mushaf/buku terbuka dengan bintang di tengah -->
+      <path d="M24 6 C21 3.3 15.5 2 8 2 C6.3 2 5 3.3 5 5 L5 32 C5 33.7 6.3 35 8 35 C15.5 35 21 36.3 24 39" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M24 6 C27 3.3 32.5 2 40 2 C41.7 2 43 3.3 43 5 L43 32 C43 33.7 41.7 35 40 35 C32.5 35 27 36.3 24 39" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="24" y1="6" x2="24" y2="39" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="9" y1="9" x2="19" y2="9.6" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+      <line x1="9" y1="14" x2="19" y2="14.4" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+      <line x1="9" y1="19" x2="19" y2="19.2" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+      <line x1="29" y1="9.6" x2="39" y2="9" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+      <line x1="29" y1="14.4" x2="39" y2="14" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+      <line x1="29" y1="19.2" x2="39" y2="19" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+      <path fill="currentColor" d="M24 22 L25.2 25.5 L29 25.5 L26 27.7 L27.2 31.2 L24 29 L20.8 31.2 L22 27.7 L19 25.5 L22.8 25.5 Z"/>
+    </svg>
+    <h1>Sambung Ayat & Tebak Arti</h1>
+    <p>Latihan Al-Qur'an Juz 30 · PAI SMA/SMK</p>
+  </div>
+
+  <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">
+    <span class="dot"></span>
+    <span id="sound-toggle-label">Bacaan ayat saat diblok: Aktif</span>
+  </button>
+
+  <!-- ============ DAFTAR SCREEN ============ -->
+  <div class="card hidden" id="screen-daftar">
+    <div class="lamp-wrap" id="lampWrap" title="Klik tali lampu">
+      <svg viewBox="0 0 200 260" width="150" height="194">
+        <polygon class="cone" points="70,115 130,115 190,255 10,255"></polygon>
+        <g class="shade-group">
+          <path class="shade" d="M70,20 Q100,10 130,20 L155,110 Q100,122 45,110 Z"></path>
+          <path class="shade-rim" d="M46,109 Q100,121 154,109"></path>
+          <g class="sleep-face">
+            <path class="eye" d="M78,62 Q85,68 92,62"></path>
+            <path class="eye" d="M108,62 Q115,68 122,62"></path>
+          </g>
+          <g class="awake-face">
+            <circle class="eye-open" cx="84" cy="60" r="4.5"></circle>
+            <circle class="eye-open" cx="116" cy="60" r="4.5"></circle>
+            <path class="mouth-smile" d="M92,74 Q100,84 108,74 Q100,80 92,74 Z"></path>
+          </g>
+          <path class="cord" d="M62,95 Q50,110 55,128"></path>
+          <circle class="cord-bulb" cx="55" cy="133" r="6"></circle>
+        </g>
+        <rect class="pole" x="95" y="110" width="10" height="100"></rect>
+        <ellipse class="base" cx="100" cy="212" rx="46" ry="10"></ellipse>
+      </svg>
+    </div>
+    <div class="lamp-hint" id="lamp-hint">Klik tali lampu untuk mulai daftar</div>
+    <div class="lamp-credit" id="lamp-credit">Pembelajaran ini dikembangkan oleh Robi Tridani</div>
+    <div class="daftar-fields" id="daftar-fields">
+      <div class="section-label" style="margin-top:0;">Daftar Dahulu</div>
+      <div class="small-note">Isi data berikut untuk mulai berlatih. Data ini digunakan untuk mencatat hasil latihanmu.</div>
+      <div class="field">
+        <label for="daftar-nama">Nama Lengkap</label>
+        <input type="text" id="daftar-nama" placeholder="Contoh: ROBI TRIDANI" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="daftar-kelas">Kelas</label>
+        <input type="text" id="daftar-kelas" placeholder="Contoh: X AKL 2" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="daftar-nis">NIS / NISN</label>
+        <input type="text" id="daftar-nis" placeholder="Contoh: 0012345678" autocomplete="off">
+      </div>
+      <div class="field-error" id="daftar-error">Semua data wajib diisi.</div>
+      <button class="start-btn" id="daftar-btn" onclick="submitDaftar()">Simpan &amp; Lanjutkan</button>
+    </div>
+  </div>
+
+  <!-- ============ HOME SCREEN ============ -->
+  <div class="card hidden" id="screen-home">
+    <div class="student-badge" id="student-badge">
+      <span>Halo, <b id="student-name-label"></b> · <span id="student-kelas-label"></span></span>
+      <span class="swap" onclick="gantiAkun()">Ganti akun</span>
+    </div>
+    <div class="section-label">1. Pilih Mode Permainan</div>
+    <div class="mode-grid">
+      <button class="mode-btn" data-mode="sambung" onclick="selectMode('sambung')">
+        <span class="icon">🔗</span>
+        <span class="title">Sambung Ayat</span>
+        <span class="desc">Dibacakan satu ayat, tebak ayat lanjutannya yang tepat.</span>
+      </button>
+      <button class="mode-btn" data-mode="arti" onclick="selectMode('arti')">
+        <span class="icon">📖</span>
+        <span class="title">Tebak Arti</span>
+        <span class="desc">Tebak arti kata atau arti ayat dalam Bahasa Indonesia.</span>
+      </button>
+      <button class="mode-btn" data-mode="hafalan" onclick="selectMode('hafalan')">
+        <span class="icon">📿</span>
+        <span class="title">Hafalan Surah Pilihan</span>
+        <span class="desc">Murajaah ayat demi ayat: Al-Waqi'ah, Al-Mulk &amp; Al-Kahfi, lengkap audio murottal.</span>
+      </button>
+    </div>
+
+    <div class="section-label" id="surah-section-label">2. Pilih Surah / Ayat</div>
+    <div class="surah-grid" id="surah-grid"></div>
+    <div class="ayat-hint" id="surah-section-hint">Klik kartu untuk pilih semua ayat dalam surah, atau klik "Pilih ayat ▾" untuk memilih ayat tertentu saja.</div>
+
+    <div class="hf-batas-panel hidden" id="hf-batas-panel">
+      <p class="hf-batas-title">3. Batas Hafalan (opsional)</p>
+      <div class="hf-batas-row">
+        <div class="field">
+          <label for="hf-batas-mulai">Ayat mulai</label>
+          <input type="number" id="hf-batas-mulai" min="1" placeholder="1">
+        </div>
+        <div class="field">
+          <label for="hf-batas-sampai">Ayat sampai</label>
+          <input type="number" id="hf-batas-sampai" min="1" placeholder="terakhir">
+        </div>
+      </div>
+      <div class="field">
+        <label for="hf-batas-baru">Maks. ayat baru per sesi</label>
+        <input type="number" id="hf-batas-baru" min="1" placeholder="tanpa batas">
+      </div>
+      <p class="hf-batas-hint">Kosongkan jika ingin menghafal seluruh surah tanpa batas. Ayat yang sudah pernah ditandai hafal tidak dihitung sebagai "ayat baru".</p>
+      <div class="hf-resume-note hidden" id="hf-resume-note"></div>
+    </div>
+
+    <button class="start-btn" id="start-btn" onclick="startGame()" disabled>Pilih mode &amp; surah dahulu</button>
+    <div class="inline-warning hidden" id="start-warning">Surah/ayat yang dipilih terlalu pendek untuk mode ini. Coba tambahkan ayat atau surah lain.</div>
+  </div>
+
+  <!-- ============ QUIZ SCREEN ============ -->
+  <div class="card hidden" id="screen-quiz">
+    <button class="back-btn" id="quiz-back-btn" onclick="backToPilihAyat()">← Kembali ke Pilih Ayat</button>
+    <div class="topbar">
+      <div class="stat">Soal <b id="q-index">1</b>/<span id="q-total">10</span></div>
+      <div class="stat">🔥 Beruntun <b id="q-streak">0</b></div>
+      <div class="stat">⭐ Skor <b id="q-score">0</b></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="q-kicker" id="q-kicker">SAMBUNG AYAT</div>
+    <div class="q-arabic" id="q-arabic"></div>
+    <div class="q-context" id="q-context"></div>
+    <div class="q-prompt" id="q-prompt"></div>
+
+    <div class="options" id="options"></div>
+
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">Lanjut →</button>
+  </div>
+
+  <!-- ============ HAFALAN SCREEN ============ -->
+  <div class="card hidden" id="screen-hafalan">
+    <button class="back-btn" onclick="backToPilihSurahHafalan()">← Kembali ke Pilih Surah</button>
+    <div class="topbar">
+      <div class="stat"><b id="hf-surah-title">—</b></div>
+      <div class="stat">Ayat <b id="hf-index">1</b>/<span id="hf-total">1</span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="hf-progress-fill" style="width:0%"></div></div>
+    <div class="hf-progress-note" id="hf-progress-note">0 dari 0 ayat ditandai hafal</div>
+
+    <div class="q-kicker">HAFALAN · MURAJAAH AYAT DEMI AYAT</div>
+    <div class="q-arabic" id="hf-arabic"></div>
+    <div class="q-context" id="hf-context"></div>
+
+    <button class="hf-play-btn" id="hf-play-btn" onclick="playHafalanAudio()">🔊 Putar Bacaan Ayat Ini</button>
+    <button class="hf-reveal-btn" id="hf-reveal-btn" onclick="toggleHafalanArti()">Lihat Arti Ayat</button>
+    <div class="hf-arti hidden" id="hf-arti"></div>
+
+    <div class="hf-setoran-box" id="hf-setoran-box">
+      <p class="hf-setoran-title">🎙️ Setoran Hafalan — Rekam Suara</p>
+      <p class="hf-setoran-desc">Bacakan ayat ini dari hafalanmu (tanpa melihat teks). Sistem akan mendengarkan lalu mengoreksi bacaanmu kata demi kata.</p>
+      <button class="hf-record-btn" id="hf-record-btn" onclick="toggleSetoranRecording()">🎤 Mulai Rekam Setoran</button>
+      <p class="hf-setoran-note hidden" id="hf-setoran-unsupported">Browser ini belum mendukung pengenalan suara. Coba pakai Google Chrome versi terbaru di HP/laptop, dan izinkan akses mikrofon.</p>
+      <div class="hf-setoran-result hidden" id="hf-setoran-result">
+        <div class="hf-setoran-score" id="hf-setoran-score"></div>
+        <div class="hf-setoran-compare" id="hf-setoran-compare"></div>
+        <div class="hf-setoran-said" id="hf-setoran-said"></div>
+        <div class="hf-setoran-actions">
+          <button class="ghost-btn" onclick="toggleSetoranRecording()">🔁 Rekam Ulang</button>
+          <button class="hf-setoran-accept-btn hidden" id="hf-setoran-accept-btn" onclick="acceptSetoranAsHafal()">✔ Tandai Hafal (Benar)</button>
+        </div>
+      </div>
+    </div>
+
+    <label class="hf-check">
+      <input type="checkbox" id="hf-check-input" onchange="toggleHafalMark()">
+      <span>Saya sudah hafal ayat ini</span>
+    </label>
+
+    <div class="btn-row">
+      <button class="ghost-btn" id="hf-prev-btn" onclick="hafalanPrev()">← Sebelumnya</button>
+      <button class="start-btn" style="margin-top:0;" id="hf-next-btn" onclick="hafalanNext()">Berikutnya →</button>
+    </div>
+  </div>
+
+  <!-- ============ RESULT SCREEN ============ -->
+  <div class="card hidden" id="screen-result">
+    <div class="result-hero">
+      <div class="section-label" style="margin-top:0;">Hasil Latihan</div>
+      <div class="result-score" id="result-score">0/10</div>
+      <div class="result-sub" id="result-sub">Jawaban benar</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="stat-score">0</div><div class="lbl">Total Skor</div></div>
+      <div class="stat-box"><div class="num" id="stat-streak">0</div><div class="lbl">Beruntun Terbaik</div></div>
+      <div class="stat-box"><div class="num" id="stat-acc">0%</div><div class="lbl">Akurasi</div></div>
+    </div>
+
+    <div id="review-list"></div>
+
+    <div class="btn-row">
+      <button class="ghost-btn" onclick="goHome()">Ganti Mode</button>
+      <button class="start-btn" style="margin-top:0;" onclick="restartSame()">Main Lagi</button>
+    </div>
+  </div>
+
+  <div class="footnote">Materi: surah-surah pendek Juz 30 · Dibuat untuk latihan mandiri, bukan pengganti tadarus bersama guru.</div>
+  <div class="admin-link"><a onclick="openAdminLogin()">Admin</a></div>
+</div>
+
+<!-- ============ ADMIN LOGIN MODAL ============ -->
+<div class="modal-overlay hidden" id="admin-login-modal">
+  <div class="modal-card">
+    <h3>Masuk Admin</h3>
+    <div class="field">
+      <label for="admin-password-input">Password Admin</label>
+      <input type="password" id="admin-password-input" placeholder="Masukkan password">
+    </div>
+    <div class="field-error" id="admin-login-error">Password salah.</div>
+    <div class="modal-btn-row">
+      <button class="ghost-btn" onclick="closeAdminLogin()">Batal</button>
+      <button class="start-btn" style="margin-top:0;" onclick="submitAdminLogin()">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN SCREEN ============ -->
+<div class="app hidden" id="screen-admin-wrap">
+  <div class="card" id="screen-admin">
+    <div class="admin-topbar">
+      <h2>Panel Admin</h2>
+      <span class="admin-logout" onclick="adminLogout()">Keluar</span>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" id="tab-btn-rekap" onclick="switchAdminTab('rekap')">Rekap Nilai</button>
+      <button class="admin-tab-btn" id="tab-btn-soal" onclick="switchAdminTab('soal')">Kelola Soal</button>
+    </div>
+
+    <!-- Panel: Rekap Nilai -->
+    <div class="admin-panel active" id="panel-rekap">
+      <div class="filter-row">
+        <input type="text" id="rekap-filter-kelas" placeholder="Filter kelas..." oninput="renderRekapTable()">
+        <input type="text" id="rekap-filter-nama" placeholder="Filter nama..." oninput="renderRekapTable()">
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="rekap-table">
+          <thead><tr>
+            <th>Waktu</th><th>Nama</th><th>Kelas</th><th>NIS</th><th>Mode</th><th>Skor</th><th>Benar/Total</th><th>Akurasi</th><th>Aksi</th>
+          </tr></thead>
+          <tbody id="rekap-tbody"></tbody>
+        </table>
+      </div>
+      <div class="loading-note hidden" id="rekap-loading">Memuat data...</div>
+    </div>
+
+    <!-- Panel: Kelola Soal -->
+    <div class="admin-panel" id="panel-soal">
+      <div class="admin-toolbar">
+        <button class="ghost-btn" onclick="openSoalForm()">+ Tambah Ayat</button>
+        <button class="ghost-btn" onclick="seedDefaultSoal()">Isi Data Default</button>
+      </div>
+      <div class="small-note">"Isi Data Default" akan mengganti seluruh data di sheet Soal dengan data bawaan aplikasi (Juz 30). Gunakan sekali di awal setup.</div>
+
+      <div class="soal-form hidden" id="soal-form">
+        <input type="hidden" id="soal-id-input">
+        <div class="grid2">
+          <div class="field">
+            <label>ID Surah (huruf kecil, tanpa spasi)</label>
+            <input type="text" id="soal-surahid-input" placeholder="contoh: ikhlas">
+          </div>
+          <div class="field">
+            <label>Nama Surah</label>
+            <input type="text" id="soal-surahnama-input" placeholder="contoh: Al-Ikhlas">
+          </div>
+          <div class="field">
+            <label>Nomor Surah (mushaf)</label>
+            <input type="number" id="soal-surahnum-input" placeholder="contoh: 112">
+          </div>
+          <div class="field">
+            <label>Nomor Ayat</label>
+            <input type="number" id="soal-nomorayat-input" placeholder="contoh: 1">
+          </div>
+        </div>
+        <div class="field">
+          <label>Teks Arab</label>
+          <input type="text" id="soal-arab-input" placeholder="teks ayat berbahasa Arab" dir="rtl">
+        </div>
+        <div class="field">
+          <label>Arti Bahasa Indonesia</label>
+          <input type="text" id="soal-arti-input" placeholder="arti ayat">
+        </div>
+        <div class="modal-btn-row">
+          <button class="ghost-btn" onclick="closeSoalForm()">Batal</button>
+          <button class="start-btn" style="margin-top:0;" onclick="submitSoalForm()">Simpan</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="soal-table">
+          <thead><tr>
+            <th>Surah</th><th>Ayat #</th><th>Teks Arab</th><th>Arti</th><th>Aksi</th>
+          </tr></thead>
+          <tbody id="soal-tbody"></tbody>
+        </table>
+      </div>
+      <div class="loading-note hidden" id="soal-loading">Memuat data...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= KONFIGURASI BACKEND ================= */
+// Tempel URL deployment Web App Google Apps Script (Code.gs) di sini,
+// contoh: 'https://script.google.com/macros/s/AKfycb.../exec'
+// Jika dikosongkan, aplikasi tetap jalan memakai data bawaan (offline),
+// tapi fitur daftar/rekap nilai/kelola soal tidak akan tersimpan ke sheet.
+const API_URL = 'https://script.google.com/macros/s/AKfycbyqzaWRtNLpSp8NctxgKS2FbzCC6UlMRaXtTQluxVfeb2wSF1K0IZWBYj5JLQjKpbN0IA/exec';
+
+function isApiConfigured(){
+  return API_URL && API_URL.indexOf('https://') === 0;
+}
+
+async function apiCall(action, payload){
+  if(!isApiConfigured()) return { ok:false, error:'API_URL belum diatur.' };
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST',
+      // pakai text/plain supaya tidak memicu CORS preflight di Apps Script
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, payload: payload||{} }),
+    });
+    return await res.json();
+  }catch(err){
+    return { ok:false, error:String(err) };
+  }
+}
+
+/* ================= DATA ================= */
+const SURAHS = [
+  { id:'fatihah', name:'Al-Fatihah', num:1, ayat:[
+    {ar:'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', id_:'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang'},
+    {ar:'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ', id_:'Segala puji bagi Allah, Tuhan seluruh alam'},
+    {ar:'الرَّحْمَٰنِ الرَّحِيمِ', id_:'Yang Maha Pengasih, Maha Penyayang'},
+    {ar:'مَالِكِ يَوْمِ الدِّينِ', id_:'Yang menguasai hari pembalasan'},
+    {ar:'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ', id_:'Hanya kepada-Mu kami menyembah, dan hanya kepada-Mu kami memohon pertolongan'},
+    {ar:'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ', id_:'Tunjukilah kami jalan yang lurus'},
+    {ar:'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ', id_:'Yaitu jalan orang yang Engkau beri nikmat, bukan jalan yang dimurkai dan bukan pula jalan yang sesat'},
+  ]},
+  { id:'ikhlas', name:'Al-Ikhlas', num:112, ayat:[
+    {ar:'قُلْ هُوَ اللَّهُ أَحَدٌ', id_:'Katakanlah: Dialah Allah, Yang Maha Esa'},
+    {ar:'اللَّهُ الصَّمَدُ', id_:'Allah tempat bergantung segala sesuatu'},
+    {ar:'لَمْ يَلِدْ وَلَمْ يُولَدْ', id_:'Dia tidak beranak dan tidak pula diperanakkan'},
+    {ar:'وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ', id_:'Dan tidak ada satu pun yang setara dengan-Nya'},
+  ]},
+  { id:'falaq', name:'Al-Falaq', num:113, ayat:[
+    {ar:'قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ', id_:'Katakanlah: Aku berlindung kepada Tuhan yang menguasai waktu subuh'},
+    {ar:'مِنْ شَرِّ مَا خَلَقَ', id_:'Dari kejahatan makhluk yang Dia ciptakan'},
+    {ar:'وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ', id_:'Dan dari kejahatan malam apabila telah gelap gulita'},
+    {ar:'وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ', id_:'Dan dari kejahatan para penyihir yang meniup pada buhul-buhul'},
+    {ar:'وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ', id_:'Dan dari kejahatan orang dengki apabila ia dengki'},
+  ]},
+  { id:'nas', name:'An-Nas', num:114, ayat:[
+    {ar:'قُلْ أَعُوذُ بِرَبِّ النَّاسِ', id_:'Katakanlah: Aku berlindung kepada Tuhan manusia'},
+    {ar:'مَلِكِ النَّاسِ', id_:'Raja manusia'},
+    {ar:'إِلَٰهِ النَّاسِ', id_:'Sembahan manusia'},
+    {ar:'مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ', id_:'Dari kejahatan bisikan setan yang bersembunyi'},
+    {ar:'الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ', id_:'Yang membisikkan kejahatan ke dalam dada manusia'},
+    {ar:'مِنَ الْجِنَّةِ وَالنَّاسِ', id_:'Dari golongan jin dan manusia'},
+  ]},
+  { id:'asr', name:"Al-'Asr", num:103, ayat:[
+    {ar:'وَالْعَصْرِ', id_:'Demi masa'},
+    {ar:'إِنَّ الْإِنْسَانَ لَفِي خُسْرٍ', id_:'Sesungguhnya manusia benar-benar berada dalam kerugian'},
+    {ar:'إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ وَتَوَاصَوْا بِالْحَقِّ وَتَوَاصَوْا بِالصَّبْرِ', id_:'Kecuali orang yang beriman, beramal saleh, saling menasihati dalam kebenaran, dan saling menasihati dalam kesabaran'},
+  ]},
+  { id:'kautsar', name:'Al-Kautsar', num:108, ayat:[
+    {ar:'إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ', id_:'Sesungguhnya Kami telah memberimu nikmat yang banyak'},
+    {ar:'فَصَلِّ لِرَبِّكَ وَانْحَرْ', id_:'Maka laksanakanlah salat karena Tuhanmu, dan berkurbanlah'},
+    {ar:'إِنَّ شَانِئَكَ هُوَ الْأَبْتَرُ', id_:'Sesungguhnya orang yang membencimu, dialah yang terputus'},
+  ]},
+  { id:'nasr', name:'An-Nasr', num:110, ayat:[
+    {ar:'إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ', id_:'Apabila telah datang pertolongan Allah dan kemenangan'},
+    {ar:'وَرَأَيْتَ النَّاسَ يَدْخُلُونَ فِي دِينِ اللَّهِ أَفْوَاجًا', id_:'Dan engkau melihat manusia berbondong-bondong masuk agama Allah'},
+    {ar:'فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُ إِنَّهُ كَانَ تَوَّابًا', id_:'Maka bertasbihlah memuji Tuhanmu dan mohonlah ampun; sesungguhnya Dia Maha Penerima tobat'},
+  ]},
+  { id:'kafirun', name:'Al-Kafirun', num:109, ayat:[
+    {ar:'قُلْ يَا أَيُّهَا الْكَافِرُونَ', id_:'Katakanlah: Wahai orang-orang kafir'},
+    {ar:'لَا أَعْبُدُ مَا تَعْبُدُونَ', id_:'Aku tidak menyembah apa yang kamu sembah'},
+    {ar:'وَلَا أَنْتُمْ عَابِدُونَ مَا أَعْبُدُ', id_:'Dan kamu bukan penyembah apa yang aku sembah'},
+    {ar:'وَلَا أَنَا عَابِدٌ مَا عَبَدْتُمْ', id_:'Dan aku tidak pernah menjadi penyembah apa yang kamu sembah'},
+    {ar:'وَلَا أَنْتُمْ عَابِدُونَ مَا أَعْبُدُ', id_:'Dan kamu tidak pernah pula menjadi penyembah apa yang aku sembah'},
+    {ar:'لَكُمْ دِينُكُمْ وَلِيَ دِينِ', id_:'Bagimu agamamu, dan bagiku agamaku'},
+  ]},
+  { id:'quraisy', name:'Quraisy', num:106, ayat:[
+    {ar:'لِإِيلَافِ قُرَيْشٍ', id_:'Karena kebiasaan orang-orang Quraisy'},
+    {ar:'إِيلَافِهِمْ رِحْلَةَ الشِّتَاءِ وَالصَّيْفِ', id_:'Yaitu kebiasaan mereka bepergian pada musim dingin dan musim panas'},
+    {ar:'فَلْيَعْبُدُوا رَبَّ هَٰذَا الْبَيْتِ', id_:'Maka hendaklah mereka menyembah Tuhan pemilik rumah ini (Kabah)'},
+    {ar:'الَّذِي أَطْعَمَهُمْ مِنْ جُوعٍ وَآمَنَهُمْ مِنْ خَوْفٍ', id_:'Yang telah memberi makan kepada mereka untuk menghilangkan lapar dan mengamankan mereka dari rasa takut'},
+  ]},
+  { id:'fil', name:'Al-Fil', num:105, ayat:[
+    {ar:'أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَابِ الْفِيلِ', id_:'Tidakkah engkau memperhatikan bagaimana Tuhanmu bertindak terhadap pasukan bergajah'},
+    {ar:'أَلَمْ يَجْعَلْ كَيْدَهُمْ فِي تَضْلِيلٍ', id_:'Bukankah Dia telah menjadikan tipu daya mereka sia-sia'},
+    {ar:'وَأَرْسَلَ عَلَيْهِمْ طَيْرًا أَبَابِيلَ', id_:'Dan Dia mengirim kepada mereka burung yang berbondong-bondong'},
+    {ar:'تَرْمِيهِمْ بِحِجَارَةٍ مِنْ سِجِّيلٍ', id_:'Yang melempari mereka dengan batu dari tanah yang terbakar'},
+    {ar:'فَجَعَلَهُمْ كَعَصْفٍ مَأْكُولٍ', id_:'Lalu Dia menjadikan mereka seperti daun-daun yang dimakan ulat'},
+  ]},
+  { id:'maun', name:"Al-Ma'un", num:107, ayat:[
+    {ar:'أَرَأَيْتَ الَّذِي يُكَذِّبُ بِالدِّينِ', id_:'Tahukah engkau orang yang mendustakan agama'},
+    {ar:'فَذَٰلِكَ الَّذِي يَدُعُّ الْيَتِيمَ', id_:'Itulah orang yang menghardik anak yatim'},
+    {ar:'وَلَا يَحُضُّ عَلَىٰ طَعَامِ الْمِسْكِينِ', id_:'Dan tidak menganjurkan memberi makan orang miskin'},
+    {ar:'فَوَيْلٌ لِلْمُصَلِّينَ', id_:'Maka celakalah orang-orang yang salat'},
+    {ar:'الَّذِينَ هُمْ عَنْ صَلَاتِهِمْ سَاهُونَ', id_:'Yaitu orang yang lalai dari salatnya'},
+    {ar:'الَّذِينَ هُمْ يُرَاءُونَ', id_:'Orang-orang yang berbuat riya'},
+    {ar:'وَيَمْنَعُونَ الْمَاعُونَ', id_:'Dan enggan memberikan bantuan'},
+  ]},
+  { id:'maidah4849', name:"Al-Ma'idah (48-49)", num:5, ayat:[
+    {ar:'وَاَنْزَلْنَآ اِلَيْكَ الْكِتٰبَ بِالْحَقِّ مُصَدِّقًا لِّمَا بَيْنَ يَدَيْهِ مِنَ الْكِتٰبِ وَمُهَيْمِنًا عَلَيْهِ فَاحْكُمْ بَيْنَهُمْ بِمَآ اَنْزَلَ اللّٰهُ وَلَا تَتَّبِعْ اَهْوَاۤءَهُمْ عَمَّا جَاۤءَكَ مِنَ الْحَقِّۗ لِكُلٍّ جَعَلْنَا مِنْكُمْ شِرْعَةً وَّمِنْهَاجًا ۗوَلَوْ شَاۤءَ اللّٰهُ لَجَعَلَكُمْ اُمَّةً وَّاحِدَةً وَّلٰكِنْ لِّيَبْلُوَكُمْ فِيْ مَآ اٰتٰىكُمْ فَاسْتَبِقُوا الْخَيْرٰتِۗ اِلَى اللّٰهِ مَرْجِعُكُمْ جَمِيْعًا فَيُنَبِّئُكُمْ بِمَا كُنْتُمْ فِيْهِ تَخْتَلِفُوْنَۙ', id_:'Kami telah menurunkan kitab suci (Al-Qur\'an) kepadamu (Nabi Muhammad) dengan membawa kebenaran sebagai pembenar kitab-kitab yang diturunkan sebelumnya dan sebagai penjaganya (acuan kebenaran terhadapnya). Maka, putuskanlah perkara mereka menurut aturan yang diturunkan Allah dan janganlah engkau mengikuti hawa nafsu mereka dengan meninggalkan kebenaran yang telah datang kepadamu. Untuk setiap umat di antara kamu Kami berikan aturan dan jalan yang terang. Seandainya Allah menghendaki, niscaya Dia menjadikanmu satu umat saja. Akan tetapi, Allah hendak mengujimu tentang karunia yang telah Dia anugerahkan kepadamu. Maka, berlomba-lombalah dalam berbuat kebaikan. Hanya kepada Allah kamu semua kembali, lalu Dia memberitahukan kepadamu apa yang selama ini kamu perselisihkan.', ayahNum:48},
+    {ar:'وَاَنِ احْكُمْ بَيْنَهُمْ بِمَآ اَنْزَلَ اللّٰهُ وَلَا تَتَّبِعْ اَهْوَاۤءَهُمْ وَاحْذَرْهُمْ اَنْ يَّفْتِنُوْكَ عَنْۢ بَعْضِ مَآ اَنْزَلَ اللّٰهُ اِلَيْكَۗ فَاِنْ تَوَلَّوْا فَاعْلَمْ اَنَّمَا يُرِيْدُ اللّٰهُ اَنْ يُّصِيْبَهُمْ بِبَعْضِ ذُنُوْبِهِمْ ۗوَاِنَّ كَثِيْرًا مِّنَ النَّاسِ لَفٰسِقُوْنَ', id_:'Hendaklah engkau memutuskan (urusan) di antara mereka menurut aturan yang diturunkan Allah dan janganlah engkau mengikuti hawa nafsu mereka. Waspadailah mereka agar mereka tidak dapat memperdayakan engkau untuk meninggalkan sebagian apa yang telah diturunkan Allah kepadamu. Jika mereka berpaling, ketahuilah bahwa sesungguhnya Allah berkehendak menimpakan musibah kepada mereka disebabkan sebagian dosa-dosa mereka. Sesungguhnya banyak dari manusia adalah orang-orang yang fasik.', ayahNum:49},
+  ]},
+];
+
+// Surah-surah "hafalan" (muraja'ah) yang teksnya panjang — Ar-Rahman, Al-Waqi'ah,
+// Al-Mulk, dan Al-Kahfi — TIDAK ditulis manual di sini (rawan salah ketik untuk
+// ratusan ayat). Teks Arab + terjemahan Kemenag-nya dimuat langsung dari API
+// alquran.cloud saat surah dipilih di mode "Hafalan" (lihat ensureSurahLoaded).
+// `ayat` dimulai kosong dan diisi otomatis (lazy-load) sekali saja lalu di-cache.
+const HAFALAN_SURAH_IDS = ['rahman', 'waqiah', 'mulk', 'kahfi'];
+const HAFALAN_SURAHS = [
+  { id:'rahman', name:'Ar-Rahman', num:55, ayat:[], lazy:true, loading:false },
+  { id:'waqiah', name:"Al-Waqi'ah", num:56, ayat:[], lazy:true, loading:false },
+  { id:'mulk', name:'Al-Mulk', num:67, ayat:[], lazy:true, loading:false },
+  { id:'kahfi', name:'Al-Kahfi', num:18, ayat:[], lazy:true, loading:false },
+];
+SURAHS.push(...HAFALAN_SURAHS);
+
+// Salinan data bawaan (sebelum kemungkinan ditimpa data dari server),
+// dipakai khusus untuk tombol "Isi Data Default" di panel admin.
+const DEFAULT_SURAHS = JSON.parse(JSON.stringify(SURAHS));
+
+const MUFRADAT = [
+  {ar:'الرَّحْمَٰنِ', id_:'Yang Maha Pengasih'},
+  {ar:'الْعَالَمِينَ', id_:'seluruh alam'},
+  {ar:'الصِّرَاطَ الْمُسْتَقِيمَ', id_:'jalan yang lurus'},
+  {ar:'أَحَدٌ', id_:'Yang Maha Esa'},
+  {ar:'الصَّمَدُ', id_:'tempat bergantung segala sesuatu'},
+  {ar:'النَّاسِ', id_:'manusia'},
+  {ar:'الْوَسْوَاسِ الْخَنَّاسِ', id_:'bisikan setan yang bersembunyi'},
+  {ar:'الْعَصْرِ', id_:'masa'},
+  {ar:'خُسْرٍ', id_:'kerugian'},
+  {ar:'الصَّالِحَاتِ', id_:'amal saleh'},
+  {ar:'الْكَوْثَرَ', id_:'nikmat yang banyak'},
+  {ar:'فَصَلِّ', id_:'maka laksanakanlah salat'},
+  {ar:'الْكَافِرُونَ', id_:'orang-orang kafir'},
+  {ar:'دِينِ', id_:'agama'},
+  {ar:'الْفِيلِ', id_:'gajah'},
+  {ar:'طَيْرًا أَبَابِيلَ', id_:'burung yang berbondong-bondong'},
+  {ar:'الْيَتِيمَ', id_:'anak yatim'},
+  {ar:'الْمِسْكِينِ', id_:'orang miskin'},
+  {ar:'يُرَاءُونَ', id_:'berbuat riya (pamer)'},
+  {ar:'الْمَاعُونَ', id_:'bantuan / barang berguna'},
+  {ar:'الشِّتَاءِ وَالصَّيْفِ', id_:'musim dingin dan musim panas'},
+  {ar:'جُوعٍ', id_:'lapar'},
+  {ar:'خَوْفٍ', id_:'rasa takut'},
+  {ar:'نَصْرُ اللَّهِ وَالْفَتْحُ', id_:'pertolongan Allah dan kemenangan'},
+];
+
+/* Audio bacaan ayat asli (Mishary Alafasy) via everyayah.com, per nomor surah + ayat mushaf */
+function pad3(n){ return String(n).padStart(3,'0'); }
+function ayahAudioUrl(surahNum, ayahNum){
+  return `https://everyayah.com/data/Alafasy_128kbps/${pad3(surahNum)}${pad3(ayahNum)}.mp3`;
+}
+
+/* Ambil teks Arab + terjemahan Indonesia sebuah surah "hafalan" dari API
+   alquran.cloud (gratis, publik), lalu simpan ke s.ayat supaya seluruh
+   fitur lain (audio, tampilan, dst) bisa memakainya seperti surah biasa.
+   Hasil di-cache di object surah itu sendiri, jadi hanya diambil sekali. */
+async function ensureSurahLoaded(s){
+  if(!s.lazy || (s.ayat && s.ayat.length)) return true;
+  if(s.loading){
+    while(s.loading){ await new Promise(r=>setTimeout(r, 150)); }
+    return s.ayat.length > 0;
+  }
+  s.loading = true;
+  renderSurahGrid();
+  try{
+    const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.num}/editions/quran-uthmani,id.indonesian`);
+    const json = await res.json();
+    const arEd = json.data && json.data.find(e => e.edition && e.edition.identifier === 'quran-uthmani');
+    const idEd = json.data && json.data.find(e => e.edition && e.edition.identifier === 'id.indonesian');
+    if(arEd && idEd && arEd.ayahs){
+      s.ayat = arEd.ayahs.map((a, idx) => ({
+        ar: a.text,
+        id_: (idEd.ayahs[idx] && idEd.ayahs[idx].text) || '',
+        ayahNum: a.numberInSurah,
+      }));
+    }
+  }catch(err){
+    console.error('Gagal memuat ayat ' + s.name, err);
+  }
+  s.loading = false;
+  renderSurahGrid();
+  return s.ayat.length > 0;
+}
+
+/* ================= STATE ================= */
+let state = {
+  mode:null,          // 'sambung' | 'arti' | 'hafalan'
+  selectedAyat:new Set(), // keys: `${surahId}::${idx}`
+  expandedSurahs:new Set(),
+  questions:[],
+  qi:0,
+  score:0,
+  streak:0,
+  bestStreak:0,
+  correctCount:0,
+  wrongList:[],
+  locked:false,
+};
+
+/* ================= HOME SCREEN SETUP ================= */
+function ayatKey(surahId, idx){ return `${surahId}::${idx}`; }
+// "Semua Surah (acak)" & hitungan total sengaja hanya mencakup surah-surah
+// pendek biasa; 3 surah hafalan (panjang) punya alur & pemilihan sendiri.
+function quizSurahs(){ return SURAHS.filter(s=>!HAFALAN_SURAH_IDS.includes(s.id)); }
+function totalAyatCount(){ return quizSurahs().reduce((n,s)=>n+s.ayat.length,0); }
+function surahSelectedCount(s){ return s.ayat.reduce((n,_,idx)=>n+(state.selectedAyat.has(ayatKey(s.id,idx))?1:0),0); }
+function isHafalanMode(){ return state.mode === 'hafalan'; }
+
+function renderSurahGrid(){
+  const grid = document.getElementById('surah-grid');
+  grid.innerHTML = '';
+  const label = document.getElementById('surah-section-label');
+  const hint = document.getElementById('surah-section-hint');
+  const hafalan = isHafalanMode();
+
+  if(label) label.textContent = hafalan ? '2. Pilih Surah untuk Dihafal' : '2. Pilih Surah / Ayat';
+  if(hint) hint.textContent = hafalan
+    ? 'Pilih salah satu surah. Latihan akan dimulai dari ayat pertama yang belum kamu tandai hafal.'
+    : 'Klik kartu untuk pilih semua ayat dalam surah, atau klik "Pilih ayat ▾" untuk memilih ayat tertentu saja.';
+
+  if(!hafalan){
+    const allChip = document.createElement('div');
+    allChip.className='surah-chip';
+    allChip.id='surah-all';
+    allChip.innerHTML = `<div class="surah-chip-head"><span>Semua Surah (acak)</span><span class="ar">☪</span></div>`;
+    allChip.onclick = () => toggleAll();
+    grid.appendChild(allChip);
+  }
+
+  const list = hafalan ? HAFALAN_SURAHS : quizSurahs();
+
+  list.forEach(s=>{
+    const chip = document.createElement('div');
+    chip.className='surah-chip';
+    chip.dataset.id = s.id;
+    if(s.loading) chip.classList.add('loading');
+
+    const head = document.createElement('div');
+    head.className='surah-chip-head';
+    let countLabel;
+    if(s.loading) countLabel = '<span class="ar muted">Memuat…</span>';
+    else if(s.lazy && !s.ayat.length) countLabel = '<span class="ar muted">Ketuk utk muat</span>';
+    else countLabel = `<span class="ar">${s.ayat.length} ayat</span>`;
+    head.innerHTML = `<span>${s.name}</span>${countLabel}`;
+    head.onclick = (e) => { e.stopPropagation(); toggleSurah(s.id); };
+    chip.appendChild(head);
+
+    if(!hafalan && s.ayat.length>1){
+      const expandBtn = document.createElement('div');
+      expandBtn.className='surah-expand-toggle';
+      expandBtn.textContent = state.expandedSurahs.has(s.id) ? 'Sembunyikan ayat ▴' : 'Pilih ayat ▾';
+      expandBtn.onclick = (e) => { e.stopPropagation(); toggleExpand(s.id); };
+      chip.appendChild(expandBtn);
+
+      if(state.expandedSurahs.has(s.id)){
+        chip.classList.add('expanded');
+        const pillList = document.createElement('div');
+        pillList.className='ayat-pill-list';
+        s.ayat.forEach((a,idx)=>{
+          const pill = document.createElement('div');
+          pill.className='ayat-pill';
+          pill.dataset.surah = s.id;
+          pill.dataset.idx = idx;
+          pill.textContent = `Ayat ${a.ayahNum || (idx+1)}`;
+          pill.onclick = (e) => { e.stopPropagation(); toggleAyat(s.id, idx); };
+          pillList.appendChild(pill);
+        });
+        chip.appendChild(pillList);
+      }
+    }
+
+    grid.appendChild(chip);
+  });
+  syncSurahUI();
+}
+function toggleExpand(surahId){
+  if(state.expandedSurahs.has(surahId)) state.expandedSurahs.delete(surahId);
+  else state.expandedSurahs.add(surahId);
+  renderSurahGrid();
+}
+function toggleAll(){
+  const allSelected = state.selectedAyat.size === totalAyatCount();
+  if(allSelected){ state.selectedAyat.clear(); }
+  else {
+    state.selectedAyat = new Set();
+    quizSurahs().forEach(s=> s.ayat.forEach((_,idx)=> state.selectedAyat.add(ayatKey(s.id, idx))));
+  }
+  syncSurahUI();
+}
+async function toggleSurah(id){
+  const s = SURAHS.find(x=>x.id===id);
+  if(s.loading) return;
+  if(s.lazy && !s.ayat.length){
+    const ok = await ensureSurahLoaded(s);
+    if(!ok){
+      alert('Gagal memuat ayat ' + s.name + ' dari server. Periksa koneksi internet lalu coba lagi.');
+      return;
+    }
+  }
+  if(isHafalanMode()){
+    // Mode hafalan: hanya boleh 1 surah aktif dalam satu waktu.
+    const alreadySelected = s.ayat.length>0 && surahSelectedCount(s) === s.ayat.length;
+    state.selectedAyat = new Set();
+    if(!alreadySelected){
+      s.ayat.forEach((_,idx)=> state.selectedAyat.add(ayatKey(id, idx)));
+    }
+    // Surah berganti -> kosongkan input batas ayat sebelumnya (rentang lama
+    // milik surah lain tidak relevan lagi).
+    ['hf-batas-mulai','hf-batas-sampai','hf-batas-baru'].forEach(elId=>{
+      const el = document.getElementById(elId);
+      if(el) el.value = '';
+    });
+    renderSurahGrid();
+    updateHafalanBatasPanel();
+    return;
+  }
+  const fullySelected = surahSelectedCount(s) === s.ayat.length;
+  if(fullySelected){
+    s.ayat.forEach((_,idx)=> state.selectedAyat.delete(ayatKey(id, idx)));
+  } else {
+    s.ayat.forEach((_,idx)=> state.selectedAyat.add(ayatKey(id, idx)));
+  }
+  syncSurahUI();
+}
+function toggleAyat(surahId, idx){
+  const key = ayatKey(surahId, idx);
+  if(state.selectedAyat.has(key)) state.selectedAyat.delete(key);
+  else state.selectedAyat.add(key);
+  syncSurahUI();
+}
+function syncSurahUI(){
+  const allChip = document.getElementById('surah-all');
+  if(allChip) allChip.classList.toggle('selected', state.selectedAyat.size === totalAyatCount());
+  document.querySelectorAll('.surah-chip[data-id]').forEach(chip=>{
+    const s = SURAHS.find(x=>x.id===chip.dataset.id);
+    const n = surahSelectedCount(s);
+    chip.classList.toggle('selected', n>0);
+    chip.querySelectorAll('.ayat-pill').forEach(pill=>{
+      const key = ayatKey(pill.dataset.surah, Number(pill.dataset.idx));
+      pill.classList.toggle('selected', state.selectedAyat.has(key));
+    });
+  });
+  updateStartBtn();
+}
+function selectMode(m){
+  const changed = state.mode !== m;
+  state.mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('selected', b.dataset.mode===m));
+  if(changed){
+    // Set surah yang tersedia berbeda antara mode kuis & mode hafalan,
+    // jadi pilihan lama dikosongkan supaya tidak membingungkan.
+    state.selectedAyat = new Set();
+    state.expandedSurahs = new Set();
+  }
+  renderSurahGrid();
+  updateStartBtn();
+  updateHafalanBatasPanel();
+}
+function updateHafalanBatasPanel(){
+  const panel = document.getElementById('hf-batas-panel');
+  if(!panel) return;
+  const surahId = state.selectedAyat.size ? [...state.selectedAyat][0].split('::')[0] : null;
+  const surah = (isHafalanMode() && surahId) ? SURAHS.find(s=>s.id===surahId) : null;
+  if(!surah || !surah.ayat.length){
+    panel.classList.add('hidden');
+    return;
+  }
+  panel.classList.remove('hidden');
+  const total = surah.ayat.length;
+  const mulaiInput = document.getElementById('hf-batas-mulai');
+  const sampaiInput = document.getElementById('hf-batas-sampai');
+  mulaiInput.max = String(total);
+  sampaiInput.max = String(total);
+  sampaiInput.placeholder = String(total);
+
+  const resumeNote = document.getElementById('hf-resume-note');
+  const savedPos = loadHafalanPosisi(surah.id);
+  if(savedPos!==null && savedPos>=0 && savedPos<total){
+    resumeNote.textContent = `Kamu punya posisi tersimpan di ayat ${savedPos+1} untuk surah ini. Nanti akan ditanya apakah mau melanjutkan dari sana.`;
+    resumeNote.classList.remove('hidden');
+  } else {
+    resumeNote.classList.add('hidden');
+  }
+}
+function updateStartBtn(){
+  const btn = document.getElementById('start-btn');
+  const ok = state.mode && state.selectedAyat.size>0;
+  btn.disabled = !ok;
+  btn.textContent = ok ? 'Mulai Latihan' : 'Pilih mode & surah dahulu';
+  const warningEl = document.getElementById('start-warning');
+  if(warningEl) warningEl.classList.add('hidden');
+}
+
+/* ================= SOAL DARI SERVER (SHEET "Soal") ================= */
+// Surah hafalan (Al-Waqi'ah/Al-Mulk/Al-Kahfi) tidak disimpan di sheet "Soal"
+// admin (teksnya diambil live dari API), jadi harus selalu dipastikan tetap
+// ada di SURAHS setiap kali daftar itu ditimpa/di-refresh dari server.
+function ensureHafalanSurahsPresent(){
+  HAFALAN_SURAHS.forEach(hs=>{
+    if(!SURAHS.find(s=>s.id===hs.id)) SURAHS.push(hs);
+  });
+}
+async function loadSoalFromServer(){
+  if(!isApiConfigured()){ ensureHafalanSurahsPresent(); return; } // tetap pakai data bawaan (offline)
+  const res = await apiCall('getSoal');
+  if(!res || !res.ok || !Array.isArray(res.data) || res.data.length===0){ ensureHafalanSurahsPresent(); return; } // fallback ke data bawaan
+  const bySurah = {};
+  res.data.forEach(row=>{
+    const sid = row.SurahID;
+    if(!sid) return;
+    if(!bySurah[sid]){
+      bySurah[sid] = { id:sid, name:row.SurahNama||sid, num:Number(row.SurahNum)||0, ayat:[] };
+    }
+    bySurah[sid].ayat.push({ ar: row.TeksArab, id_: row.ArtiIndo, ayahNum: Number(row.NomorAyat)||undefined });
+  });
+  const grouped = Object.values(bySurah).map(s=>{
+    s.ayat.sort((a,b)=>(a.ayahNum||0)-(b.ayahNum||0));
+    return s;
+  }).sort((a,b)=>(a.num||0)-(b.num||0));
+  SURAHS.length = 0;
+  grouped.forEach(s=>SURAHS.push(s));
+  ensureHafalanSurahsPresent();
+}
+
+/* ================= IDENTITAS SISWA (localStorage) ================= */
+const STUDENT_KEY = 'sambungAyat_siswa';
+function getStudent(){
+  try{ return JSON.parse(localStorage.getItem(STUDENT_KEY) || 'null'); }catch(e){ return null; }
+}
+function setStudent(data){ localStorage.setItem(STUDENT_KEY, JSON.stringify(data)); }
+function clearStudent(){ localStorage.removeItem(STUDENT_KEY); }
+
+/* ---- Lampu animasi di layar daftar ---- */
+let lampState = 'sleep';
+function applyLampState(next){
+  lampState = next;
+  const screenDaftar = document.getElementById('screen-daftar');
+  const lampWrap = document.getElementById('lampWrap');
+  screenDaftar.classList.remove('state-sleep','state-green','state-red');
+  screenDaftar.classList.add('state-' + lampState);
+  lampWrap.classList.remove('pulse');
+  void lampWrap.offsetWidth; // reflow biar animasi bisa diulang
+  lampWrap.classList.add('pulse');
+}
+function lampShake(msg){
+  const errEl = document.getElementById('daftar-error');
+  const screenDaftar = document.getElementById('screen-daftar');
+  errEl.textContent = msg;
+  errEl.classList.add('show');
+  applyLampState('red');
+  screenDaftar.classList.remove('shake');
+  void screenDaftar.offsetWidth;
+  screenDaftar.classList.add('shake');
+  setTimeout(()=>{ if(lampState==='red') applyLampState('green'); }, 1400);
+}
+document.getElementById('lampWrap').addEventListener('click', ()=>{
+  applyLampState(lampState === 'sleep' ? 'green' : 'sleep');
+});
+
+async function submitDaftar(){
+  const nama = document.getElementById('daftar-nama').value.trim();
+  const kelas = document.getElementById('daftar-kelas').value.trim();
+  const nis = document.getElementById('daftar-nis').value.trim();
+  const errEl = document.getElementById('daftar-error');
+  if(!nama || !kelas || !nis){
+    lampShake('Semua data wajib diisi.');
+    return;
+  }
+  errEl.classList.remove('show');
+  applyLampState('green');
+  const btn = document.getElementById('daftar-btn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  if(isApiConfigured()){
+    const res = await apiCall('register', {nama, kelas, nis});
+    if(!res.ok){
+      btn.disabled = false; btn.textContent = 'Simpan & Lanjutkan';
+      lampShake('Gagal menyimpan data ke server. Coba lagi.');
+      return;
+    }
+  }
+  setStudent({nama, kelas, nis});
+  btn.disabled = false; btn.textContent = 'Simpan & Lanjutkan';
+  showHomeScreen();
+}
+
+function gantiAkun(){
+  clearStudent();
+  document.getElementById('daftar-nama').value = '';
+  document.getElementById('daftar-kelas').value = '';
+  document.getElementById('daftar-nis').value = '';
+  document.getElementById('screen-home').classList.add('hidden');
+  document.getElementById('screen-daftar').classList.remove('hidden');
+  applyLampState('sleep');
+}
+
+function showHomeScreen(){
+  const student = getStudent();
+  document.getElementById('student-name-label').textContent = student.nama;
+  document.getElementById('student-kelas-label').textContent = student.kelas;
+  document.getElementById('screen-daftar').classList.add('hidden');
+  document.getElementById('screen-home').classList.remove('hidden');
+}
+
+async function initApp(){
+  await loadSoalFromServer();
+  renderSurahGrid();
+  if(getStudent()){
+    showHomeScreen();
+  } else {
+    document.getElementById('screen-daftar').classList.remove('hidden');
+  }
+}
+initApp();
+
+/* ================= QUESTION GENERATION ================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function pickN(arr, n){ return shuffle(arr).slice(0,n); }
+
+function buildFlatAyat(selectedAyat){
+  const flat = [];
+  SURAHS.forEach(s=>{
+    s.ayat.forEach((a,idx)=>{
+      if(selectedAyat.has(ayatKey(s.id, idx))) flat.push({surah:s, idx, ...a});
+    });
+  });
+  return flat;
+}
+
+function genSambungQuestions(selectedAyat, count){
+  const allAyatFlat = buildFlatAyat(selectedAyat);
+  const globalAyatFlat = buildFlatAyat(new Set(SURAHS.flatMap(s=>s.ayat.map((_,idx)=>ayatKey(s.id,idx)))));
+  const qs = [];
+  // Eligible pairs: current ayat must be selected; the "next ayat" is taken
+  // straight from the surah's data even if it isn't individually checked,
+  // so picking just 1 ayat is enough to play Sambung Ayat.
+  const pool = [];
+  SURAHS.forEach(s=>{
+    for(let idx=0; idx<s.ayat.length-1; idx++){
+      if(selectedAyat.has(ayatKey(s.id, idx))){
+        pool.push({surah:s, idx});
+      }
+    }
+  });
+  shuffle(pool).slice(0, count).forEach(({surah, idx})=>{
+    const current = surah.ayat[idx];
+    const correctNext = surah.ayat[idx+1];
+    let distractorsPool = allAyatFlat.filter(a => !(a.surah.id===surah.id && a.idx===idx+1));
+    if(distractorsPool.length < 3){
+      distractorsPool = globalAyatFlat.filter(a => !(a.surah.id===surah.id && a.idx===idx+1));
+    }
+    const distractors = pickN(distractorsPool, Math.min(3, distractorsPool.length)).map(a=>({ar:a.ar, audioUrl:ayahAudioUrl(a.surah.num, a.ayahNum || (a.idx+1))}));
+    const correctOpt = {ar:correctNext.ar, correct:true, audioUrl:ayahAudioUrl(surah.num, correctNext.ayahNum || (idx+2))};
+    const options = shuffle([correctOpt, ...distractors.map(d=>({...d, correct:false}))]);
+    qs.push({
+      type:'sambung',
+      kicker:'SAMBUNG AYAT',
+      prompt:'Pilih ayat lanjutannya yang tepat:',
+      arabic: current.ar,
+      audioUrl: ayahAudioUrl(surah.num, current.ayahNum || (idx+1)),
+      context: `${surah.name} ayat ${current.ayahNum || (idx+1)} — "${current.id_}"`,
+      options,
+      correctText: correctNext.ar,
+      correctMeaning: correctNext.id_,
+      correctAudioUrl: ayahAudioUrl(surah.num, correctNext.ayahNum || (idx+2)),
+    });
+  });
+  return qs;
+}
+
+function genArtiQuestions(selectedAyat, count){
+  const allAyatFlat = buildFlatAyat(selectedAyat);
+  const globalAyatFlat = buildFlatAyat(new Set(SURAHS.flatMap(s=>s.ayat.map((_,idx)=>ayatKey(s.id,idx)))));
+  const qs = [];
+  const half = Math.ceil(count/2);
+
+  // Type A: word meaning (from MUFRADAT), independent of surah filter but flavor text stays general
+  const wordQs = pickN(MUFRADAT, Math.min(half, MUFRADAT.length)).map(w=>{
+    const distractors = pickN(MUFRADAT.filter(x=>x.ar!==w.ar), 3).map(d=>d.id_);
+    const options = shuffle([{text:w.id_, correct:true}, ...distractors.map(d=>({text:d, correct:false}))]);
+    return {
+      type:'arti-kata',
+      kicker:'TEBAK ARTI KATA',
+      prompt:'Apa arti kata/frasa berikut?',
+      arabic: w.ar,
+      context: 'Kosakata (mufradat) dari surah-surah pendek',
+      options,
+      correctText: w.id_,
+    };
+  });
+
+  // Type B: full ayat meaning — works even when only 1 ayat is selected,
+  // by falling back to the full ayat database for distractors when the
+  // selected scope doesn't have enough ayat of its own.
+  const ayatPool = pickN(allAyatFlat, Math.min(count - wordQs.length, allAyatFlat.length));
+  const ayatQs = ayatPool.map(a=>{
+    let distractorSource = allAyatFlat.filter(x=>x.ar!==a.ar);
+    if(distractorSource.length < 3){
+      distractorSource = globalAyatFlat.filter(x=>x.ar!==a.ar);
+    }
+    const distractors = pickN(distractorSource, Math.min(3, distractorSource.length)).map(d=>d.id_);
+    const options = shuffle([{text:a.id_, correct:true}, ...distractors.map(d=>({text:d, correct:false}))]);
+    return {
+      type:'arti-ayat',
+      kicker:'TEBAK ARTI AYAT',
+      prompt:'Apa arti ayat berikut dalam Bahasa Indonesia?',
+      arabic: a.ar,
+      audioUrl: ayahAudioUrl(a.surah.num, a.ayahNum || (a.idx+1)),
+      context: `${a.surah.name} ayat ${a.ayahNum || (a.idx+1)}`,
+      options,
+      correctText: a.id_,
+    };
+  });
+
+  return shuffle([...wordQs, ...ayatQs]);
+}
+
+/* ================= GAME FLOW ================= */
+function backToPilihAyat(){
+  if(!confirm('Kembali ke Pilih Ayat? Progres soal saat ini tidak akan disimpan.')) return;
+  document.getElementById('screen-quiz').classList.add('hidden');
+  document.getElementById('screen-result').classList.add('hidden');
+  document.getElementById('screen-home').classList.remove('hidden');
+}
+
+function startGame(){
+  if(isHafalanMode()){ startHafalan(); return; }
+  resetPlayedAyat();
+  const count = 10;
+  let qs = [];
+  if(state.mode==='sambung') qs = genSambungQuestions(state.selectedAyat, count);
+  else qs = genArtiQuestions(state.selectedAyat, count);
+
+  const warningEl = document.getElementById('start-warning');
+  if(qs.length===0){
+    warningEl.classList.remove('hidden');
+    return;
+  }
+  warningEl.classList.add('hidden');
+
+  state.questions = qs;
+  state.qi = 0;
+  state.score = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.correctCount = 0;
+  state.wrongList = [];
+
+  document.getElementById('screen-home').classList.add('hidden');
+  document.getElementById('screen-result').classList.add('hidden');
+  document.getElementById('screen-quiz').classList.remove('hidden');
+  document.getElementById('q-total').textContent = state.questions.length;
+  renderQuestion();
+}
+
+/* ================= HAFALAN (MURAJAAH) FLOW ================= */
+// Progres "sudah hafal" disimpan per siswa (NIS) + per surah di localStorage,
+// jadi tetap ada walau browser ditutup/dibuka lagi di perangkat yang sama.
+let hf = {
+  surah:null, idx:0, marked:new Set(),
+  rangeStart:0, rangeEnd:0,      // batas rentang ayat (indeks 0-based) untuk sesi ini
+  limitBaru:null,                // maks ayat baru per sesi (null = tanpa batas)
+  baselineMarked:new Set(),      // ayat yang sudah hafal SEBELUM sesi ini dimulai
+  visitedNewSet:new Set(),       // ayat baru yang sudah dikunjungi selama sesi ini
+};
+
+function hafalanProgressKey(surahId){
+  const st = getStudent();
+  const uid = (st && st.nis) ? st.nis : 'tamu';
+  return `hafalanProgres_${uid}_${surahId}`;
+}
+function loadHafalanProgress(surahId){
+  try{ return new Set(JSON.parse(localStorage.getItem(hafalanProgressKey(surahId)) || '[]')); }
+  catch(e){ return new Set(); }
+}
+function saveHafalanProgress(surahId, set){
+  try{ localStorage.setItem(hafalanProgressKey(surahId), JSON.stringify([...set])); }catch(e){}
+}
+
+// ---- Simpan Hafalan: posisi ayat terakhir dibaca, supaya bisa dilanjutkan ----
+function hafalanPosisiKey(surahId){
+  const st = getStudent();
+  const uid = (st && st.nis) ? st.nis : 'tamu';
+  return `hafalanPosisi_${uid}_${surahId}`;
+}
+function loadHafalanPosisi(surahId){
+  const v = localStorage.getItem(hafalanPosisiKey(surahId));
+  if(v===null) return null;
+  const n = parseInt(v, 10);
+  return Number.isNaN(n) ? null : n;
+}
+function saveHafalanPosisi(surahId, idx){
+  try{ localStorage.setItem(hafalanPosisiKey(surahId), String(idx)); }catch(e){}
+}
+function clearHafalanPosisi(surahId){
+  try{ localStorage.removeItem(hafalanPosisiKey(surahId)); }catch(e){}
+}
+
+async function startHafalan(){
+  const surahId = state.selectedAyat.size ? [...state.selectedAyat][0].split('::')[0] : null;
+  const surah = surahId ? SURAHS.find(s=>s.id===surahId) : null;
+  const warningEl = document.getElementById('start-warning');
+  if(!surah){
+    warningEl.textContent = 'Pilih salah satu surah hafalan terlebih dahulu.';
+    warningEl.classList.remove('hidden');
+    return;
+  }
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+  btn.textContent = 'Memuat ayat…';
+  const ok = await ensureSurahLoaded(surah);
+  btn.disabled = false;
+  updateStartBtn();
+  if(!ok){
+    warningEl.textContent = 'Gagal memuat ayat dari server. Periksa koneksi internet lalu coba lagi.';
+    warningEl.classList.remove('hidden');
+    return;
+  }
+  warningEl.classList.add('hidden');
+
+  const total = surah.ayat.length;
+
+  // Baca batas rentang ayat dari input (opsional). Nilai kosong/di luar
+  // jangkauan otomatis dianggap "seluruh surah".
+  const mulaiVal = parseInt(document.getElementById('hf-batas-mulai').value, 10);
+  const sampaiVal = parseInt(document.getElementById('hf-batas-sampai').value, 10);
+  let rangeStart = (mulaiVal>=1 && mulaiVal<=total) ? mulaiVal-1 : 0;
+  let rangeEnd = (sampaiVal>=1 && sampaiVal<=total) ? sampaiVal-1 : total-1;
+  if(rangeEnd < rangeStart){ const tmp=rangeStart; rangeStart=rangeEnd; rangeEnd=tmp; }
+
+  // Baca batas jumlah ayat baru per sesi (opsional).
+  const limitBaruVal = parseInt(document.getElementById('hf-batas-baru').value, 10);
+  const limitBaru = (limitBaruVal>=1) ? limitBaruVal : null;
+
+  hf.surah = surah;
+  hf.marked = loadHafalanProgress(surah.id);
+  hf.baselineMarked = new Set(hf.marked);
+  hf.rangeStart = rangeStart;
+  hf.rangeEnd = rangeEnd;
+  hf.limitBaru = limitBaru;
+  hf.visitedNewSet = new Set();
+
+  // Simpan Hafalan: tawarkan lanjut dari posisi ayat terakhir jika ada &
+  // masih berada di dalam rentang yang dipilih sekarang.
+  const savedPos = loadHafalanPosisi(surah.id);
+  let startIdx = rangeStart;
+  if(savedPos!==null && savedPos>=rangeStart && savedPos<=rangeEnd){
+    const lanjut = confirm(`Lanjutkan hafalan dari ayat ${savedPos+1}?\nTekan Batal untuk mulai dari ayat ${rangeStart+1}.`);
+    if(lanjut) startIdx = savedPos;
+  }
+  hf.idx = startIdx;
+  // Ayat antara awal rentang sampai posisi mulai dianggap sudah "dilewati"
+  // sesi ini, jadi tidak ikut terhitung sebagai ayat baru yang baru dibuka.
+  for(let i=rangeStart; i<=startIdx; i++){
+    if(!hf.baselineMarked.has(i)) hf.visitedNewSet.add(i);
+  }
+
+  document.getElementById('screen-home').classList.add('hidden');
+  document.getElementById('screen-hafalan').classList.remove('hidden');
+  renderHafalan();
+}
+
+function renderHafalan(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  if(recitationAudio){ try{ recitationAudio.pause(); recitationAudio.currentTime = 0; }catch(e){} }
+  stopSetoranRecording();
+  resetSetoranUI();
+  const s = hf.surah;
+  const a = s.ayat[hf.idx];
+  const ayahNum = a.ayahNum || (hf.idx+1);
+
+  const rangeTotal = hf.rangeEnd - hf.rangeStart + 1;
+  const rangeMarked = [...hf.marked].filter(i=>i>=hf.rangeStart && i<=hf.rangeEnd).length;
+
+  document.getElementById('hf-surah-title').textContent = s.name;
+  document.getElementById('hf-index').textContent = (hf.idx - hf.rangeStart) + 1;
+  document.getElementById('hf-total').textContent = rangeTotal;
+  document.getElementById('hf-progress-fill').style.width = `${(rangeMarked/rangeTotal)*100}%`;
+  document.getElementById('hf-progress-note').textContent = `${rangeMarked} dari ${rangeTotal} ayat ditandai hafal`;
+
+  // Simpan Hafalan: catat posisi ayat yang sedang dibuka, agar sesi
+  // berikutnya bisa ditawarkan untuk melanjutkan dari sini.
+  saveHafalanPosisi(s.id, hf.idx);
+
+  const arEl = document.getElementById('hf-arabic');
+  arEl.textContent = a.ar;
+  arEl.setAttribute('data-audio', ayahAudioUrl(s.num, ayahNum));
+  document.getElementById('hf-context').textContent = `${s.name} ayat ${ayahNum}`;
+
+  const artiEl = document.getElementById('hf-arti');
+  artiEl.textContent = a.id_;
+  artiEl.classList.add('hidden');
+  document.getElementById('hf-reveal-btn').textContent = 'Lihat Arti Ayat';
+
+  document.getElementById('hf-check-input').checked = hf.marked.has(hf.idx);
+  document.getElementById('hf-prev-btn').disabled = hf.idx===hf.rangeStart;
+  document.getElementById('hf-next-btn').textContent = (hf.idx === hf.rangeEnd) ? 'Selesai & Simpan' : 'Berikutnya →';
+}
+
+function playHafalanAudio(){
+  const s = hf.surah, a = s.ayat[hf.idx];
+  playRecitation(ayahAudioUrl(s.num, a.ayahNum || (hf.idx+1)), a.ar);
+}
+
+function toggleHafalanArti(){
+  const el = document.getElementById('hf-arti');
+  const nowHidden = el.classList.toggle('hidden');
+  document.getElementById('hf-reveal-btn').textContent = nowHidden ? 'Lihat Arti Ayat' : 'Sembunyikan Arti';
+}
+
+function toggleHafalMark(){
+  const checked = document.getElementById('hf-check-input').checked;
+  if(checked) hf.marked.add(hf.idx); else hf.marked.delete(hf.idx);
+  saveHafalanProgress(hf.surah.id, hf.marked);
+  const rangeTotal = hf.rangeEnd - hf.rangeStart + 1;
+  const rangeMarked = [...hf.marked].filter(i=>i>=hf.rangeStart && i<=hf.rangeEnd).length;
+  document.getElementById('hf-progress-fill').style.width = `${(rangeMarked/rangeTotal)*100}%`;
+  document.getElementById('hf-progress-note').textContent = `${rangeMarked} dari ${rangeTotal} ayat ditandai hafal`;
+}
+
+function hafalanPrev(){
+  if(hf.idx<=hf.rangeStart) return;
+  hf.idx -= 1;
+  renderHafalan();
+}
+function hafalanNext(){
+  if(hf.idx >= hf.rangeEnd){
+    finishHafalan();
+    return;
+  }
+  const nextIdx = hf.idx + 1;
+  const isNewAyat = !hf.baselineMarked.has(nextIdx);
+  // Batas Hafalan: jumlah ayat baru per sesi.
+  if(hf.limitBaru && isNewAyat && !hf.visitedNewSet.has(nextIdx) && hf.visitedNewSet.size >= hf.limitBaru){
+    alert(`Batas ${hf.limitBaru} ayat baru untuk sesi ini sudah tercapai.\nIstirahat dulu — posisi kamu sudah tersimpan dan bisa dilanjutkan nanti.`);
+    return;
+  }
+  if(isNewAyat) hf.visitedNewSet.add(nextIdx);
+  hf.idx = nextIdx;
+  renderHafalan();
+  playHafalanAudio();
+}
+
+async function finishHafalan(){
+  const s = hf.surah;
+  const total = hf.rangeEnd - hf.rangeStart + 1;
+  const benar = [...hf.marked].filter(i=>i>=hf.rangeStart && i<=hf.rangeEnd).length;
+  const akurasi = Math.round((benar/total)*100);
+  const st = getStudent();
+  if(st){
+    apiCall('saveScore', {
+      nama: st.nama, kelas: st.kelas, nis: st.nis,
+      mode: 'Hafalan - ' + s.name,
+      skor: akurasi, benar, total, akurasi, beruntun: 0,
+    });
+  }
+  alert(`Murajaah ${s.name} (ayat ${hf.rangeStart+1}–${hf.rangeEnd+1}) selesai.\n${benar} dari ${total} ayat sudah ditandai hafal (${akurasi}%).\nProgres hafalan tersimpan otomatis.`);
+  // Rentang ini sudah tuntas, jadi posisi terakhir dikosongkan supaya sesi
+  // berikutnya mulai bersih dari rentang mana pun yang dipilih.
+  clearHafalanPosisi(s.id);
+  stopSetoranRecording();
+  document.getElementById('screen-hafalan').classList.add('hidden');
+  document.getElementById('screen-home').classList.remove('hidden');
+  updateHafalanBatasPanel();
+}
+
+/* ================= SETORAN HAFALAN (rekam suara + koreksi otomatis) =================
+   Memakai Web Speech API (SpeechRecognition) bawaan browser untuk mengubah
+   bacaan siswa menjadi teks, lalu membandingkannya kata-per-kata dengan teks
+   ayat aslinya (diakritik/harakat & variasi huruf dinormalisasi dulu supaya
+   perbandingan adil). Hasil pencocokan dipakai untuk memberi skor & menandai
+   kata yang benar/salah, sekaligus (jika identitas siswa ada) dikirim ke
+   rekap nilai server seperti mode kuis lainnya. */
+let setoranRecognition = null;
+let setoranListening = false;
+
+function getSpeechRecognitionCtor(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function tokenizeArabic(text){
+  return (text || '').trim().split(/\s+/).filter(Boolean);
+}
+
+// Menyamakan variasi penulisan huruf Arab (hamza, alif, ta marbuthah, dst.)
+// dan membuang harakat/tanda baca supaya hasil speech-to-text (yang biasanya
+// polos tanpa harakat) bisa dibandingkan adil dengan teks mushaf.
+function normalizeArabicForCompare(text){
+  return (text || '')
+    .replace(/[\u064B-\u0652\u0670\u06D6-\u06ED\u0640]/g, '') // harakat & tatweel
+    .replace(/[إأآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي')
+    .replace(/[^\u0600-\u06FF\s]/g, '') // buang karakter non-Arab (tanda baca dari hasil STT, dsb.)
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Alignment kata referensi vs kata yang diucapkan, memakai Longest Common
+// Subsequence supaya urutan kata tetap diperhitungkan (bukan cuma cek "ada
+// atau tidak"). Hasilnya: indeks kata referensi mana saja yang cocok.
+function alignSetoranWords(refWordsNorm, saidWordsNorm){
+  const n = refWordsNorm.length, m = saidWordsNorm.length;
+  const dp = Array.from({length:n+1}, ()=> new Array(m+1).fill(0));
+  for(let i=1;i<=n;i++){
+    for(let j=1;j<=m;j++){
+      if(refWordsNorm[i-1] && refWordsNorm[i-1]===saidWordsNorm[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+      else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+    }
+  }
+  const matchedRefIdx = new Set();
+  let i = n, j = m;
+  while(i>0 && j>0){
+    if(refWordsNorm[i-1] && refWordsNorm[i-1]===saidWordsNorm[j-1]){
+      matchedRefIdx.add(i-1);
+      i--; j--;
+    } else if(dp[i-1][j] >= dp[i][j-1]){
+      i--;
+    } else {
+      j--;
+    }
+  }
+  return matchedRefIdx;
+}
+
+function renderSetoranCompare(refWordsOriginal, matchedRefIdx){
+  return refWordsOriginal.map((w, idx)=>{
+    const cls = matchedRefIdx.has(idx) ? 'sr-ok' : 'sr-miss';
+    return `<span class="${cls}">${w}</span>`;
+  }).join(' ');
+}
+
+function resetSetoranUI(){
+  const resultBox = document.getElementById('hf-setoran-result');
+  const unsupportedNote = document.getElementById('hf-setoran-unsupported');
+  const btn = document.getElementById('hf-record-btn');
+  if(resultBox) resultBox.classList.add('hidden');
+  if(unsupportedNote) unsupportedNote.classList.add('hidden');
+  if(btn){ btn.textContent = '🎤 Mulai Rekam Setoran'; btn.classList.remove('recording'); }
+}
+
+function stopSetoranRecording(){
+  if(setoranListening && setoranRecognition){
+    try{ setoranRecognition.stop(); }catch(e){}
+  }
+  setoranListening = false;
+}
+
+function toggleSetoranRecording(){
+  const Ctor = getSpeechRecognitionCtor();
+  if(!Ctor){
+    document.getElementById('hf-setoran-unsupported').classList.remove('hidden');
+    return;
+  }
+  if(setoranListening){
+    stopSetoranRecording();
+    return;
+  }
+
+  // Hentikan audio murottal / text-to-speech supaya tidak ikut terekam mic.
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  if(recitationAudio){ try{ recitationAudio.pause(); }catch(e){} }
+
+  document.getElementById('hf-setoran-unsupported').classList.add('hidden');
+  document.getElementById('hf-setoran-result').classList.add('hidden');
+
+  setoranRecognition = new Ctor();
+  setoranRecognition.lang = 'ar-SA';
+  setoranRecognition.interimResults = false;
+  setoranRecognition.maxAlternatives = 1;
+  setoranRecognition.continuous = false;
+
+  const btn = document.getElementById('hf-record-btn');
+  btn.textContent = '⏺ Merekam… (klik untuk berhenti)';
+  btn.classList.add('recording');
+  setoranListening = true;
+
+  setoranRecognition.onresult = (e)=>{
+    const transcript = e.results[0][0].transcript;
+    evaluateSetoran(transcript);
+  };
+  setoranRecognition.onerror = (e)=>{
+    if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+      alert('Akses mikrofon ditolak. Izinkan akses mikrofon di pengaturan browser untuk memakai fitur setoran suara.');
+    } else if(e.error === 'no-speech'){
+      alert('Tidak ada suara yang terdeteksi. Coba lagi dan bacakan ayat dengan jelas & tidak terlalu pelan.');
+    } else if(e.error !== 'aborted'){
+      alert('Terjadi kendala saat merekam (' + e.error + '). Coba lagi.');
+    }
+  };
+  setoranRecognition.onend = ()=>{
+    setoranListening = false;
+    btn.textContent = '🎤 Mulai Rekam Setoran';
+    btn.classList.remove('recording');
+  };
+
+  try{
+    setoranRecognition.start();
+  }catch(err){
+    setoranListening = false;
+    btn.textContent = '🎤 Mulai Rekam Setoran';
+    btn.classList.remove('recording');
+  }
+}
+
+async function evaluateSetoran(saidTextRaw){
+  const s = hf.surah;
+  const a = s.ayat[hf.idx];
+  const ayahNum = a.ayahNum || (hf.idx+1);
+
+  const refWordsOriginal = tokenizeArabic(a.ar);
+  const refWordsNorm = refWordsOriginal.map(normalizeArabicForCompare);
+  const saidWordsOriginal = tokenizeArabic(saidTextRaw);
+  const saidWordsNorm = saidWordsOriginal.map(normalizeArabicForCompare).filter(Boolean);
+
+  const matchedRefIdx = alignSetoranWords(refWordsNorm, saidWordsNorm);
+  const score = refWordsOriginal.length ? Math.round((matchedRefIdx.size/refWordsOriginal.length)*100) : 0;
+
+  let verdict, verdictClass;
+  if(score>=85){ verdict='Bacaan bagus! Kelihatannya ayat ini sudah kamu hafal dengan baik.'; verdictClass='sr-good'; }
+  else if(score>=50){ verdict='Lumayan, tapi masih ada kata yang perlu diperbaiki (ditandai merah).'; verdictClass='sr-mid'; }
+  else{ verdict='Masih banyak yang perlu dibenahi. Dengarkan ulang lalu coba rekam lagi.'; verdictClass='sr-bad'; }
+
+  const resultBox = document.getElementById('hf-setoran-result');
+  const scoreEl = document.getElementById('hf-setoran-score');
+  const compareEl = document.getElementById('hf-setoran-compare');
+  const saidEl = document.getElementById('hf-setoran-said');
+  const acceptBtn = document.getElementById('hf-setoran-accept-btn');
+
+  resultBox.classList.remove('hidden');
+  scoreEl.innerHTML = `<span class="sr-score-num">${score}%</span><span class="${verdictClass}">${verdict}</span>`;
+  compareEl.innerHTML = renderSetoranCompare(refWordsOriginal, matchedRefIdx);
+  saidEl.innerHTML = `<span class="sr-said-label">Yang terdengar oleh sistem: </span><span class="sr-said-text">${saidWordsOriginal.join(' ') || '(tidak ada suara terdeteksi)'}</span>`;
+  acceptBtn.classList.toggle('hidden', score<85);
+
+  const st = getStudent();
+  if(st){
+    apiCall('saveScore', {
+      nama: st.nama, kelas: st.kelas, nis: st.nis,
+      mode: `Setoran - ${s.name} ayat ${ayahNum}`,
+      skor: score, benar: matchedRefIdx.size, total: refWordsOriginal.length, akurasi: score, beruntun: 0,
+    });
+  }
+}
+
+function acceptSetoranAsHafal(){
+  document.getElementById('hf-check-input').checked = true;
+  toggleHafalMark();
+  const acceptBtn = document.getElementById('hf-setoran-accept-btn');
+  if(acceptBtn) acceptBtn.classList.add('hidden');
+}
+
+function backToPilihSurahHafalan(){
+  if(!confirm('Kembali ke pilih surah? Posisi ayat & ayat yang sudah ditandai hafal tetap tersimpan.')) return;
+  stopSetoranRecording();
+  document.getElementById('screen-hafalan').classList.add('hidden');
+  document.getElementById('screen-home').classList.remove('hidden');
+  updateHafalanBatasPanel();
+}
+
+function renderQuestion(){
+  state.locked = false;
+  // hentikan suara/rekaman dari soal sebelumnya agar tidak ikut terbawa ke soal baru
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  if(recitationAudio){ try{ recitationAudio.pause(); recitationAudio.currentTime = 0; }catch(e){} }
+  try{ window.getSelection().removeAllRanges(); }catch(e){}
+  const q = state.questions[state.qi];
+  document.getElementById('q-index').textContent = state.qi+1;
+  document.getElementById('q-score').textContent = state.score;
+  document.getElementById('q-streak').textContent = state.streak;
+  document.getElementById('progress-fill').style.width = `${(state.qi/state.questions.length)*100}%`;
+  document.getElementById('q-kicker').textContent = q.kicker;
+  const qArabicEl = document.getElementById('q-arabic');
+  qArabicEl.textContent = q.arabic;
+  if(q.audioUrl) qArabicEl.setAttribute('data-audio', q.audioUrl);
+  else qArabicEl.removeAttribute('data-audio');
+  document.getElementById('q-context').textContent = q.context;
+  document.getElementById('q-prompt').textContent = q.prompt;
+
+  const optWrap = document.getElementById('options');
+  optWrap.innerHTML = '';
+  q.options.forEach((opt)=>{
+    const div = document.createElement('div');
+    div.className = 'opt';
+    const label = q.type==='sambung'
+      ? `<span class="ar"${opt.audioUrl ? ` data-audio="${opt.audioUrl}"` : ''}>${opt.ar}</span>`
+      : `<span>${opt.text}</span>`;
+    div.innerHTML = `<span class="mark"></span>${label}`;
+    div.onclick = () => answer(opt, div);
+    optWrap.appendChild(div);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').classList.remove('show');
+}
+
+function answer(opt, el){
+  if(state.locked) return;
+  state.locked = true;
+  const allOpts = document.querySelectorAll('.opt');
+  allOpts.forEach(o=>o.classList.add('locked'));
+
+  const q = state.questions[state.qi];
+  const fb = document.getElementById('feedback');
+
+  if(opt.correct){
+    el.classList.add('correct');
+    el.querySelector('.mark').textContent = '✓';
+    state.score += 10 + Math.min(state.streak,5)*2;
+    state.streak += 1;
+    state.bestStreak = Math.max(state.bestStreak, state.streak);
+    state.correctCount += 1;
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Benar! ' + (q.correctMeaning ? ('Artinya: ' + q.correctMeaning) : 'Mantap, lanjutkan.');
+  } else {
+    el.classList.add('wrong');
+    el.querySelector('.mark').textContent = '✗';
+    state.streak = 0;
+    allOpts.forEach(o=>{
+      // find and highlight the correct one visually too
+    });
+    q.options.forEach((o,i)=>{
+      if(o.correct){
+        allOpts[i].classList.add('correct');
+        allOpts[i].querySelector('.mark').textContent='✓';
+      }
+    });
+    fb.className = 'feedback show no';
+    fb.textContent = 'Belum tepat. Jawaban benar: ' + (q.type==='sambung' ? q.correctText : q.correctText);
+    state.wrongList.push({
+      arabic:q.arabic,
+      audioUrl:q.audioUrl,
+      your: q.type==='sambung' ? opt.ar : opt.text,
+      correct: q.correctText,
+    });
+  }
+
+  document.getElementById('q-score').textContent = state.score;
+  document.getElementById('q-streak').textContent = state.streak;
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function nextQuestion(){
+  state.qi += 1;
+  if(state.qi >= state.questions.length){
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult(){
+  document.getElementById('screen-quiz').classList.add('hidden');
+  document.getElementById('screen-result').classList.remove('hidden');
+  document.getElementById('progress-fill').style.width='100%';
+
+  const total = state.questions.length;
+  document.getElementById('result-score').textContent = `${state.correctCount}/${total}`;
+  const pct = Math.round((state.correctCount/total)*100);
+  document.getElementById('result-sub').textContent =
+    pct>=80 ? 'Luar biasa! Hafalanmu kuat.' :
+    pct>=50 ? 'Cukup baik, terus berlatih ya.' :
+    'Yuk murojaah lagi surah-surah ini.';
+  document.getElementById('stat-score').textContent = state.score;
+  document.getElementById('stat-streak').textContent = state.bestStreak;
+  document.getElementById('stat-acc').textContent = pct + '%';
+
+  const reviewWrap = document.getElementById('review-list');
+  reviewWrap.innerHTML = '';
+  if(state.wrongList.length){
+    const label = document.createElement('div');
+    label.className='section-label';
+    label.textContent = 'Ulasan Jawaban yang Salah';
+    reviewWrap.appendChild(label);
+    state.wrongList.forEach(w=>{
+      const div = document.createElement('div');
+      div.className='review-item';
+      div.innerHTML = `<div class="rq"${w.audioUrl ? ` data-audio="${w.audioUrl}"` : ''}>${w.arabic}</div>
+        <div>Jawabanmu: <span class="ra">${w.your}</span></div>
+        <div>Jawaban benar: <span class="rc">${w.correct}</span></div>`;
+      reviewWrap.appendChild(div);
+    });
+  }
+
+  const student = getStudent();
+  if(student && isApiConfigured()){
+    apiCall('saveScore', {
+      nama: student.nama,
+      kelas: student.kelas,
+      nis: student.nis,
+      mode: state.mode,
+      skor: state.score,
+      benar: state.correctCount,
+      total: total,
+      akurasi: pct,
+      beruntun: state.bestStreak,
+    });
+  }
+}
+
+function goHome(){
+  document.getElementById('screen-result').classList.add('hidden');
+  document.getElementById('screen-home').classList.remove('hidden');
+}
+function restartSame(){
+  startGame();
+}
+
+/* ================= SUARA SAAT MEMBLOK AYAT ================= */
+let soundOn = true;
+function toggleSound(){
+  soundOn = !soundOn;
+  const btn = document.getElementById('sound-toggle');
+  const label = document.getElementById('sound-toggle-label');
+  btn.classList.toggle('off', !soundOn);
+  label.textContent = 'Bacaan ayat saat diblok: ' + (soundOn ? 'Aktif' : 'Nonaktif');
+  if(!soundOn){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+    if(recitationAudio){ recitationAudio.pause(); recitationAudio.currentTime = 0; }
+  }
+}
+
+let audioCtx = null;
+function playSelectChime(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(640, t);
+    osc.frequency.exponentialRampToValueAtTime(920, t + 0.12);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  }catch(e){ /* audio not available, ignore */ }
+}
+
+let arabicVoice = null;
+function loadArabicVoice(){
+  if(!window.speechSynthesis) return;
+  const voices = window.speechSynthesis.getVoices();
+  arabicVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ar')) || null;
+}
+if(window.speechSynthesis){
+  loadArabicVoice();
+  window.speechSynthesis.onvoiceschanged = loadArabicVoice;
+}
+
+let speakDelayTimer = null;
+function speakArabicText(text){
+  // cadangan: suara sintetis, dipakai hanya jika rekaman asli tidak tersedia/gagal dimuat
+  if(!window.speechSynthesis) return;
+  clearTimeout(speakDelayTimer);
+  speakDelayTimer = setTimeout(()=>{
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ar-SA';
+    utter.rate = 0.75;
+    if(arabicVoice) utter.voice = arabicVoice;
+    window.speechSynthesis.speak(utter);
+  }, 250);
+}
+
+let recitationAudio = null;
+function playRecitation(url, fallbackText){
+  clearTimeout(speakDelayTimer);
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  try{
+    if(recitationAudio){ recitationAudio.pause(); recitationAudio.currentTime = 0; }
+    recitationAudio = new Audio(url);
+    recitationAudio.play().catch(()=>{ speakArabicText(fallbackText); });
+    recitationAudio.onerror = () => { speakArabicText(fallbackText); };
+  }catch(e){
+    speakArabicText(fallbackText);
+  }
+}
+
+let lastAyatPlayAt = 0;
+let lastAyatPlayedText = '';
+// Melacak ayat yang sudah pernah diputar audionya dalam sesi kuis berjalan,
+// supaya tiap ayat hanya bisa dibacakan/diputar 1 kali saja. Kunci dibuat
+// dari audioUrl (kalau ada rekaman asli) atau teks arabnya (kalau pakai
+// suara sintetis untuk potongan kosakata). Di-reset tiap mulai kuis baru
+// lewat resetPlayedAyat().
+let playedAyatKeys = new Set();
+function resetPlayedAyat(){ playedAyatKeys = new Set(); }
+
+function handleAyatSelection(){
+  if(!soundOn) return;
+  const sel = window.getSelection();
+  const text = sel ? sel.toString().trim() : '';
+  if(!text) return;
+  if(!/[\u0600-\u06FF]/.test(text)) return; // hanya untuk teks berhuruf Arab
+  // pastikan seleksi berasal dari elemen ayat, bukan teks lain
+  const anchor = sel.anchorNode;
+  const el = anchor && (anchor.nodeType===3 ? anchor.parentElement : anchor);
+  const ayatEl = el && el.closest('.q-arabic, .opt .ar, .review-item .rq');
+  if(!ayatEl) return;
+
+  // cegah suara terputar berkali-kali otomatis dari seleksi lama yang masih
+  // tertinggal (mis. saat mengklik tombol lain padahal teks ayat masih terblok)
+  const now = Date.now();
+  if(text === lastAyatPlayedText && (now - lastAyatPlayAt) < 1200) return;
+  lastAyatPlayedText = text;
+  lastAyatPlayAt = now;
+
+  const audioUrl = ayatEl.getAttribute('data-audio');
+  const playedKey = audioUrl || ('tts:' + text);
+  if(playedAyatKeys.has(playedKey)){
+    // ayat ini sudah pernah dibacakan sebelumnya — jangan diputar lagi
+    setTimeout(()=>{ try{ window.getSelection().removeAllRanges(); }catch(e){} }, 200);
+    return;
+  }
+  playedAyatKeys.add(playedKey);
+
+  playSelectChime();
+  if(audioUrl){
+    // ada rekaman bacaan asli (murottal) untuk ayat ini — mainkan langsung
+    setTimeout(()=>playRecitation(audioUrl, text), 220);
+  } else {
+    // teks berupa potongan kosakata tanpa rekaman per kata — gunakan suara sintetis sebagai cadangan
+    speakArabicText(text);
+  }
+
+  // hapus seleksi teks sesaat setelah diputar, supaya klik di tempat lain
+  // (tombol Lanjut, pilih jawaban, dll) tidak ikut memicu suara lagi
+  setTimeout(()=>{
+    try{ window.getSelection().removeAllRanges(); }catch(e){}
+  }, 500);
+}
+document.addEventListener('mouseup', handleAyatSelection);
+document.addEventListener('touchend', handleAyatSelection);
+document.addEventListener('keyup', (e)=>{
+  if(e.shiftKey) handleAyatSelection();
+});
+
+/* ================= ADMIN ================= */
+const ADMIN_KEY = 'sambungAyat_adminPw';
+function getAdminPassword(){ return sessionStorage.getItem(ADMIN_KEY) || null; }
+function setAdminPassword(pw){ sessionStorage.setItem(ADMIN_KEY, pw); }
+function clearAdminPassword(){ sessionStorage.removeItem(ADMIN_KEY); }
+
+function openAdminLogin(){
+  document.getElementById('admin-login-error').classList.remove('show');
+  document.getElementById('admin-password-input').value = '';
+  document.getElementById('admin-login-modal').classList.remove('hidden');
+}
+function closeAdminLogin(){
+  document.getElementById('admin-login-modal').classList.add('hidden');
+}
+async function submitAdminLogin(){
+  if(!isApiConfigured()){
+    document.getElementById('admin-login-error').textContent = 'API_URL belum diatur di index.html.';
+    document.getElementById('admin-login-error').classList.add('show');
+    return;
+  }
+  const pw = document.getElementById('admin-password-input').value;
+  const res = await apiCall('adminLogin', {password: pw});
+  if(res.ok){
+    setAdminPassword(pw);
+    closeAdminLogin();
+    enterAdminPanel();
+  } else {
+    document.getElementById('admin-login-error').textContent = 'Password salah.';
+    document.getElementById('admin-login-error').classList.add('show');
+  }
+}
+function adminLogout(){
+  clearAdminPassword();
+  document.getElementById('screen-admin-wrap').classList.add('hidden');
+  document.querySelector('.app').classList.remove('hidden');
+}
+function enterAdminPanel(){
+  document.querySelector('.app').classList.add('hidden');
+  document.getElementById('screen-admin-wrap').classList.remove('hidden');
+  switchAdminTab('rekap');
+}
+function switchAdminTab(tab){
+  document.getElementById('panel-rekap').classList.toggle('active', tab==='rekap');
+  document.getElementById('panel-soal').classList.toggle('active', tab==='soal');
+  document.getElementById('tab-btn-rekap').classList.toggle('active', tab==='rekap');
+  document.getElementById('tab-btn-soal').classList.toggle('active', tab==='soal');
+  if(tab==='rekap') loadRekap();
+  else loadSoalAdmin();
+}
+
+/* ---- Rekap Nilai ---- */
+let rekapData = [];
+async function loadRekap(){
+  document.getElementById('rekap-loading').classList.remove('hidden');
+  const res = await apiCall('getRekap', {password: getAdminPassword()});
+  document.getElementById('rekap-loading').classList.add('hidden');
+  if(!res.ok){ alert('Gagal memuat rekap: ' + (res.error||'')); return; }
+  rekapData = res.data || [];
+  renderRekapTable();
+}
+function renderRekapTable(){
+  const filterKelas = document.getElementById('rekap-filter-kelas').value.trim().toLowerCase();
+  const filterNama = document.getElementById('rekap-filter-nama').value.trim().toLowerCase();
+  const tbody = document.getElementById('rekap-tbody');
+  tbody.innerHTML = '';
+  rekapData
+    .filter(r => (!filterKelas || String(r.Kelas||'').toLowerCase().includes(filterKelas))
+              && (!filterNama || String(r.Nama||'').toLowerCase().includes(filterNama)))
+    .forEach(r=>{
+      const tr = document.createElement('tr');
+      const waktu = r.Timestamp ? new Date(r.Timestamp).toLocaleString('id-ID') : '';
+      tr.innerHTML = `<td>${waktu}</td><td>${r.Nama||''}</td><td>${r.Kelas||''}</td><td>${r.NIS_NISN||''}</td>
+        <td>${r.Mode||''}</td><td>${r.Skor||0}</td><td>${r.Benar||0}/${r.Total||0}</td><td>${r['Akurasi(%)']||0}%</td>
+        <td class="row-actions"><button class="del-act" onclick="hapusNilai('${waktu}','${(r.Nama||'').replace(/'/g,"\\'")}')">Hapus</button></td>`;
+      tbody.appendChild(tr);
+    });
+}
+async function hapusNilai(timestampDisplay, nama){
+  if(!confirm('Hapus data nilai ini?')) return;
+  const row = rekapData.find(r => (r.Timestamp? new Date(r.Timestamp).toLocaleString('id-ID'):'')===timestampDisplay && r.Nama===nama);
+  if(!row) return;
+  const res = await apiCall('deleteNilai', {
+    password: getAdminPassword(),
+    timestamp: new Date(row.Timestamp).toString(),
+    nama: row.Nama,
+  });
+  if(res.ok) loadRekap();
+  else alert('Gagal menghapus: ' + (res.error||''));
+}
+
+/* ---- Kelola Soal ---- */
+let soalData = [];
+async function loadSoalAdmin(){
+  document.getElementById('soal-loading').classList.remove('hidden');
+  const res = await apiCall('getSoal');
+  document.getElementById('soal-loading').classList.add('hidden');
+  if(!res.ok){ alert('Gagal memuat soal: ' + (res.error||'')); return; }
+  soalData = res.data || [];
+  renderSoalTable();
+}
+function renderSoalTable(){
+  const tbody = document.getElementById('soal-tbody');
+  tbody.innerHTML = '';
+  soalData.forEach(row=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row.SurahNama||''} (${row.SurahNum||''})</td><td>${row.NomorAyat||''}</td>
+      <td class="ar-cell">${row.TeksArab||''}</td><td>${row.ArtiIndo||''}</td>
+      <td class="row-actions">
+        <button class="edit-act" onclick='editSoal(${JSON.stringify(row.ID)})'>Ubah</button>
+        <button class="del-act" onclick='hapusSoal(${JSON.stringify(row.ID)})'>Hapus</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+function openSoalForm(){
+  document.getElementById('soal-id-input').value = '';
+  document.getElementById('soal-surahid-input').value = '';
+  document.getElementById('soal-surahnama-input').value = '';
+  document.getElementById('soal-surahnum-input').value = '';
+  document.getElementById('soal-nomorayat-input').value = '';
+  document.getElementById('soal-arab-input').value = '';
+  document.getElementById('soal-arti-input').value = '';
+  document.getElementById('soal-form').classList.remove('hidden');
+}
+function closeSoalForm(){
+  document.getElementById('soal-form').classList.add('hidden');
+}
+function editSoal(id){
+  const row = soalData.find(r=>r.ID===id);
+  if(!row) return;
+  document.getElementById('soal-id-input').value = row.ID;
+  document.getElementById('soal-surahid-input').value = row.SurahID||'';
+  document.getElementById('soal-surahnama-input').value = row.SurahNama||'';
+  document.getElementById('soal-surahnum-input').value = row.SurahNum||'';
+  document.getElementById('soal-nomorayat-input').value = row.NomorAyat||'';
+  document.getElementById('soal-arab-input').value = row.TeksArab||'';
+  document.getElementById('soal-arti-input').value = row.ArtiIndo||'';
+  document.getElementById('soal-form').classList.remove('hidden');
+}
+async function submitSoalForm(){
+  const id = document.getElementById('soal-id-input').value;
+  const payload = {
+    password: getAdminPassword(),
+    surahId: document.getElementById('soal-surahid-input').value.trim(),
+    surahNama: document.getElementById('soal-surahnama-input').value.trim(),
+    surahNum: document.getElementById('soal-surahnum-input').value,
+    nomorAyat: document.getElementById('soal-nomorayat-input').value,
+    teksArab: document.getElementById('soal-arab-input').value.trim(),
+    artiIndo: document.getElementById('soal-arti-input').value.trim(),
+  };
+  if(!payload.surahId || !payload.surahNama || !payload.teksArab || !payload.artiIndo){
+    alert('Lengkapi semua data ayat terlebih dahulu.');
+    return;
+  }
+  const res = id
+    ? await apiCall('updateSoal', {...payload, id})
+    : await apiCall('addSoal', payload);
+  if(res.ok){
+    closeSoalForm();
+    loadSoalAdmin();
+  } else {
+    alert('Gagal menyimpan: ' + (res.error||''));
+  }
+}
+async function hapusSoal(id){
+  if(!confirm('Hapus ayat ini dari bank soal?')) return;
+  const res = await apiCall('deleteSoal', {password: getAdminPassword(), id});
+  if(res.ok) loadSoalAdmin();
+  else alert('Gagal menghapus: ' + (res.error||''));
+}
+async function seedDefaultSoal(){
+  if(!confirm('Ini akan MENGGANTI seluruh data di sheet Soal dengan data bawaan aplikasi (Juz 30). Lanjutkan?')) return;
+  const items = [];
+  DEFAULT_SURAHS.forEach(s=>{
+    s.ayat.forEach((a, idx)=>{
+      items.push({
+        surahId: s.id, surahNama: s.name, surahNum: s.num,
+        nomorAyat: a.ayahNum || (idx+1), teksArab: a.ar, artiIndo: a.id_,
+      });
+    });
+  });
+  const res = await apiCall('seedDefaultSoal', {password: getAdminPassword(), items});
+  if(res.ok){
+    alert('Berhasil mengisi ' + res.count + ' ayat ke sheet Soal.');
+    loadSoalAdmin();
+  } else {
+    alert('Gagal: ' + (res.error||''));
+  }
+}
+</script>
+</body>
+</html>
